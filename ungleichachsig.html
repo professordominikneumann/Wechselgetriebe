@@ -183,6 +183,20 @@ html.touch #info{font-size:calc(12px*var(--k));left:8px;right:calc(62px*var(--k)
 html.touch #cutSl{width:calc(44px*var(--k));right:0}
 html.touch #cutTrack{left:calc(19px*var(--k))}
 html.touch #cutHandle{width:calc(44px*var(--k));left:calc(-19px*var(--k));height:calc(40px*var(--k));margin-top:calc(-20px*var(--k));line-height:calc(40px*var(--k));font-size:calc(17px*var(--k))}
+/* ===== Touch v3: kompakter, Kraftfluss-Modus ===== */
+html.touch .btn,html.touch .back{min-height:calc(32px*var(--k));padding:calc(4px*var(--k)) calc(10px*var(--k));font-size:calc(12px*var(--k))}
+html.touch .stp{min-width:calc(40px*var(--k))}
+html.touch .spv{min-height:calc(32px*var(--k));min-width:calc(64px*var(--k));padding:calc(6px*var(--k));font-size:calc(12px*var(--k))}
+html.touch .sw{min-height:calc(32px*var(--k));gap:calc(8px*var(--k));font-size:calc(12px*var(--k))}
+html.touch .sw .t{width:calc(40px*var(--k));height:calc(22px*var(--k));border-radius:calc(12px*var(--k))}
+html.touch .sw .t::after{width:calc(24px*var(--k));height:calc(24px*var(--k));top:calc(-1px*var(--k));left:calc(-1px*var(--k))}
+html.touch .sw input:checked + .t::after{left:calc(17px*var(--k))}
+html.touch #gate{width:min(calc(165px*var(--k)),44vw)}
+html.touch #cutSl{width:calc(44px*var(--k))}
+html.touch #cutTrack{left:calc(20px*var(--k))}
+html.touch #cutHandle{width:calc(44px*var(--k));left:calc(-20px*var(--k));height:calc(40px*var(--k));margin-top:calc(-20px*var(--k));line-height:calc(40px*var(--k));font-size:calc(18px*var(--k))}
+html.touch.flowon #info{display:none!important}
+@media (max-height:480px) and (orientation:landscape){ html.touch #gate{width:150px} }
 </style>
 </head>
 <body>
@@ -880,7 +894,7 @@ function updateFlowUi(){
   if(!flowOn) return;
   if(!flow.steps.length){ el.textContent='Kein Gang eingelegt – bitte im Schaltschema einen Gang wählen.'; return; }
   const n=flow.steps.length;
-  if(flow.mode==='all') el.innerHTML='Gesamter Kraftfluss im <b>'+gearName()+'</b>: '+n+' Bauteile von der Eingangswelle bis zum Abtriebsflansch.'+FLOWLEG;
+  if(flow.mode==='all') el.innerHTML='Gesamter Kraftfluss im <b>'+gearName()+'</b>: '+n+' Bauteile von der Eingangswelle bis zum Abtriebsflansch.'+FLOWLEG+((innerWidth<=900||document.documentElement.classList.contains('touch'))?'<div style="margin-top:4px;line-height:1.35">'+flow.steps.map((s,i)=>'<b>'+(i+1)+'</b> '+s.name.replace(/\s*\(.*?\)/g,'')).join(' &nbsp;·&nbsp; ')+'</div>':'');
   else el.innerHTML='Schritt <b>'+(flow.idx+1)+' von '+n+'</b>: '+flow.steps[flow.idx].name+FLOWLEG;
 }
 const FLOWLEG='<br><span style="color:#ffb400">■</span> durchlaufene Bauteile &nbsp; <span style="color:var(--flow)">━</span> Kraftfluss';
@@ -1232,9 +1246,9 @@ function layoutLabels(){
   const items=[], used=new Set();
   const proj=(v)=>{ _v.copy(v).project(cam); return [(_v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H]; };
   labG.forEach(L=>{
-    if(labOn&&groupOn[L.group]){ const p=proj(L.v); items.push({o:L,ax:p[0],ay:p[1],text:L.text,cls:'lt'}); used.add(L); }
+    if(labOn&&groupOn[L.group]&&!(flowOn&&W<560)){ const p=proj(L.v); items.push({o:L,ax:p[0],ay:p[1],text:L.text,cls:'lt'}); used.add(L); }
   });
-  if(flowOn&&flowLabOn&&flow.steps.length){
+  if(flowOn&&(flowLabOn||(labOn&&W<560))&&flow.steps.length){
     const last=flowLast();
     ensureFlowLabels(flow.steps.length);
     for(let i=0;i<=last;i++){
@@ -1537,15 +1551,26 @@ new ResizeObserver(resize).observe(stage);
   if(!fl||!inf) return;
   function pf(){ const nar=innerWidth<=900||document.documentElement.classList.contains('touch');
     if(!nar){['left','right','bottom','top','max-width','max-height'].forEach(function(p){fl.style.removeProperty(p);});return;}
-    const pr=(fl.offsetParent||document.body).getBoundingClientRect(), r=inf.getBoundingClientRect();
+    const pr=(fl.offsetParent||document.body).getBoundingClientRect();
+    let top=pr.bottom-8, L=pr.left+8, R=pr.right-62;
+    [inf,document.getElementById('labList')].forEach(function(e){ if(!e||!e.offsetParent) return; const r=e.getBoundingClientRect(); if(r.height>0&&r.top<top){ top=r.top; L=r.left; R=r.right; } });
     fl.style.setProperty('position','absolute','important');
     fl.style.setProperty('top','auto','important'); fl.style.setProperty('max-width','none','important');
-    fl.style.setProperty('left',(r.left-pr.left)+'px','important');
-    fl.style.setProperty('right',(pr.right-r.right)+'px','important');
-    fl.style.setProperty('bottom',(pr.bottom-r.top+8)+'px','important');
-    fl.style.setProperty('max-height',Math.max(60,Math.min(innerHeight*0.3,r.top-pr.top-120))+'px','important'); fl.style.setProperty('overflow','auto','important'); fl.style.setProperty('z-index','6','important'); }
+    fl.style.setProperty('left',(L-pr.left)+'px','important');
+    fl.style.setProperty('right',(pr.right-R)+'px','important');
+    fl.style.setProperty('bottom',(pr.bottom-top+8)+'px','important');
+    fl.style.setProperty('max-height',Math.max(60,Math.min(innerHeight*0.25,top-pr.top-120))+'px','important'); fl.style.setProperty('overflow','auto','important'); fl.style.setProperty('z-index','6','important'); }
+  try{ const lb=document.getElementById('labList'); if(lb) new ResizeObserver(pf).observe(lb); }catch(e){}
   try{ new ResizeObserver(pf).observe(inf); }catch(e){}
-  addEventListener('resize',pf); setInterval(pf,700); pf();
+  addEventListener('resize',pf);
+  setInterval(pf,700); pf();
+})();
+
+(function(){
+  const de=document.documentElement;
+  const sw=document.getElementById('swFlow'); if(!sw) return;
+  function s(){ de.classList.toggle('flowon',sw.checked); }
+  sw.addEventListener('change',s); s();
 })();
 /* Touch: Menü einklappen, größere Trefferflächen im Schaltschema */
 (function(){
