@@ -161,6 +161,7 @@ html.pv #cv{pointer-events:none}
   #cutHandle{width:56px;left:-25px;height:44px;margin-top:-22px;line-height:44px}
   #info{left:216px;right:auto}
 }
+html.touch #flow{left:8px!important;right:calc(62px*var(--k))!important;top:auto!important;max-width:none!important;max-height:28vh;overflow:auto;z-index:6}
 /* ===== Touch v2: Größen unabhängig von der Layout-Breite (Skalierung --k) ===== */
 html.touch{--k:1}
 html.touch #bar:not(.open)>.sw,html.touch #bar:not(.open)>.grp,html.touch #bar:not(.open)>.sep,html.touch #bar:not(.open) .fcol>.sw{display:none}
@@ -1597,6 +1598,15 @@ new ResizeObserver(resize).observe(stage);
     de.classList.add('touch');
   }
   upd(); addEventListener('resize',upd);
+})();
+
+(function(){
+  const fl=document.getElementById('flow'), inf=document.getElementById('info');
+  if(!fl||!inf) return;
+  function pf(){ if(!document.documentElement.classList.contains('touch')){fl.style.removeProperty('bottom');return;}
+    fl.style.setProperty('bottom',(inf.offsetHeight+16)+'px','important'); }
+  try{ new ResizeObserver(pf).observe(inf); }catch(e){}
+  addEventListener('resize',pf); setInterval(pf,700); pf();
 })();
 /* Touch: Menü einklappen, größere Trefferflächen im Schaltschema */
 (function(){
