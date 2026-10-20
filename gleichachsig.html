@@ -162,6 +162,9 @@ html.pv #cv{pointer-events:none}
   #info{left:216px;right:auto}
 }
 html.touch #flow{left:8px!important;right:calc(62px*var(--k))!important;top:auto!important;max-width:none!important;max-height:28vh;overflow:auto;z-index:6}
+@media (max-height:480px) and (orientation:landscape){
+ html.touch #info{left:auto!important;right:calc(62px*var(--k))!important;width:min(300px,34vw);max-height:30vh;overflow:auto;padding:6px 10px}
+}
 /* ===== Touch v2: Größen unabhängig von der Layout-Breite (Skalierung --k) ===== */
 html.touch{--k:1}
 html.touch #bar:not(.open)>.sw,html.touch #bar:not(.open)>.grp,html.touch #bar:not(.open)>.sep,html.touch #bar:not(.open) .fcol>.sw{display:none}
@@ -1603,8 +1606,15 @@ new ResizeObserver(resize).observe(stage);
 (function(){
   const fl=document.getElementById('flow'), inf=document.getElementById('info');
   if(!fl||!inf) return;
-  function pf(){ if(!document.documentElement.classList.contains('touch')){fl.style.removeProperty('bottom');return;}
-    fl.style.setProperty('bottom',(inf.offsetHeight+16)+'px','important'); }
+  function pf(){ const nar=innerWidth<=900||document.documentElement.classList.contains('touch');
+    if(!nar){['left','right','bottom','top','max-width','max-height'].forEach(function(p){fl.style.removeProperty(p);});return;}
+    const pr=(fl.offsetParent||document.body).getBoundingClientRect(), r=inf.getBoundingClientRect();
+    fl.style.setProperty('position','absolute','important');
+    fl.style.setProperty('top','auto','important'); fl.style.setProperty('max-width','none','important');
+    fl.style.setProperty('left',(r.left-pr.left)+'px','important');
+    fl.style.setProperty('right',(pr.right-r.right)+'px','important');
+    fl.style.setProperty('bottom',(pr.bottom-r.top+8)+'px','important');
+    fl.style.setProperty('max-height',Math.max(60,Math.min(innerHeight*0.3,r.top-pr.top-120))+'px','important'); fl.style.setProperty('overflow','auto','important'); fl.style.setProperty('z-index','6','important'); }
   try{ new ResizeObserver(pf).observe(inf); }catch(e){}
   addEventListener('resize',pf); setInterval(pf,700); pf();
 })();
