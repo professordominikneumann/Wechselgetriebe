@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ungleichachsiges 5-Gang-Getriebe – 3D-Modell</title>
+<style>
+:root{
+  --bg:#f3f5f7; --panel:rgba(255,255,255,.92); --ink:#1b2430; --mut:#5d6877; --line:#cdd5de;
+  --acc:#2f7fbf; --onacc:#fff; --st1:#ffffff; --st2:#e6ebf2; --knob:#86a4c2; --bar:#e7e4e3; --swon:#cfe2f3; --swoff:#ffffff; --flow:#d6203a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1f26; --panel:rgba(36,42,51,.94); --ink:#e8edf2; --mut:#9aa7b6; --line:#3a4350;
+    --acc:#5aa9e6; --onacc:#0b1a28; --st1:#252d3a; --st2:#10141a; --knob:#5f7e9b; --bar:#262c35; --swon:#2c4560; --swoff:#1a1f26; --flow:#ff6b7d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1f26; --panel:rgba(36,42,51,.94); --ink:#e8edf2; --mut:#9aa7b6; --line:#3a4350;
+  --acc:#5aa9e6; --onacc:#0b1a28; --st1:#252d3a; --st2:#10141a; --knob:#5f7e9b; --bar:#262c35; --swon:#2c4560; --swoff:#1a1f26; --flow:#ff6b7d;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+.back{font:inherit;cursor:pointer;color:var(--ink);text-decoration:none;font-weight:600;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--swoff);white-space:nowrap}
+.back:hover{border-color:var(--acc)}
+.back:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px 12px;background:var(--bar);border-bottom:1px solid var(--line)}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-weight:500;white-space:nowrap;position:relative}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .t{width:34px;height:16px;border-radius:9px;background:var(--swoff);border:1px solid var(--line);position:relative;transition:background .15s}
+.sw .t::after{content:"";position:absolute;top:-1px;left:-1px;width:18px;height:18px;border-radius:50%;background:var(--knob);transition:left .15s,background .15s}
+.sw input:checked + .t{background:var(--swon)}
+.sw input:checked + .t::after{left:17px;background:var(--acc)}
+.sw input:focus-visible + .t{outline:2px solid var(--acc);outline-offset:2px}
+.fcol{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.fb{display:none;flex-wrap:wrap;gap:6px}
+.sep{width:1px;align-self:stretch;background:var(--line)}
+.grp{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn{font:inherit;color:var(--ink);background:var(--swoff);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn.on{background:var(--swon);border-color:var(--acc)}
+.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.spv{display:inline-block;min-width:92px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:var(--swoff)}
+.stp{padding:3px 9px;min-width:34px}
+#stage{position:relative;flex:1;min-height:0;background:radial-gradient(ellipse at 50% 38%,var(--st1),var(--st2))}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#cv:active{cursor:grabbing}
+#lab{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.lt{font:500 13px system-ui,sans-serif;fill:var(--ink)}
+.lbg{fill:var(--panel);stroke:var(--mut);stroke-width:1}
+.lbgf{fill:var(--panel);stroke:var(--flow);stroke-width:1.6}
+.lf{font:700 13px system-ui,sans-serif;fill:var(--ink)}
+.lf.old{font-weight:600;opacity:.8}
+.ll{stroke:var(--ink);stroke-width:1.3;opacity:.65}
+.llf{stroke:var(--flow);stroke-width:1.8}
+.ld{fill:var(--acc)}
+.ldf{fill:var(--flow)}
+#flow{display:none;position:absolute;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-width:min(340px,70vw);font-size:13px}
+#flow .row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+#flow .txt{color:var(--ink)}
+#flow .txt b{color:var(--flow)}
+#info{position:absolute;right:66px;top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;max-width:min(300px,52vw)}
+#info b{font-weight:600}
+#info .big{font-size:20px;font-weight:700;line-height:1.1}
+#info .leg{display:flex;flex-wrap:wrap;gap:1px 10px;margin-top:6px;color:var(--mut);font-size:11px}
+#info .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#gate{position:absolute;left:10px;top:10px;width:min(230px,44vw);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+#gate svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}
+.gn{cursor:pointer;outline:none}
+.gn rect{fill:var(--panel);stroke:var(--line);stroke-width:1.5;transition:fill .15s,stroke .15s}
+.gn text{font:700 16px system-ui,sans-serif;fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.gn:hover rect,.gn:focus-visible rect{stroke:var(--acc)}
+.gn.on rect{fill:var(--acc);stroke:var(--acc)}
+.gn.on text{fill:var(--onacc)}
+.lane{stroke:var(--line);stroke-width:7;stroke-linecap:round;fill:none}
+#ball{cursor:grab}
+#tip{position:fixed;pointer-events:none;background:rgba(20,28,38,.92);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;display:none;z-index:5;max-width:260px}
+#info details{margin-top:6px;font-size:11px;color:var(--mut)}
+#info summary{cursor:pointer}
+#cutSl{position:absolute;right:12px;top:0;bottom:0;width:44px;z-index:3}
+#cutTrack{position:absolute;left:19px;top:0;bottom:0;width:6px;border-radius:3px;background:var(--line)}
+#cutHandle{position:absolute;left:-19px;width:44px;height:30px;margin-top:-15px;border-radius:6px;background:var(--knob);color:#fff;font-size:20px;line-height:30px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none}
+#cutHandle:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.cutline{stroke:var(--acc);stroke-width:1.2;stroke-dasharray:6 5;opacity:.8}
+#hint{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-size:12px;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 12px;pointer-events:none;white-space:nowrap}
+#err{display:none;position:fixed;left:12px;right:12px;top:70px;z-index:9;background:#fff3cd;color:#5c4400;border:1px solid #e0c36a;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.4}
+html.pv #bar,html.pv #gate,html.pv #info,html.pv #flow,html.pv #cutSl,html.pv #hint,html.pv #lab,html.pv #err{display:none!important}
+html.pv,html.pv body,html.pv #stage{background:transparent!important}
+html.pv #cv{pointer-events:none}
+@media (max-width:760px){#hint{display:none}.sep{display:none}}
+@media (prefers-reduced-motion:reduce){.sw .t,.sw .t::after{transition:none}}
+
+#labList{display:none;position:absolute;left:8px;right:62px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-height:30%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 8px;font-size:11.5px;columns:2;column-gap:10px}
+#labList button{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:none;border:0;border-radius:6px;padding:2px 2px;min-height:26px;cursor:pointer;break-inside:avoid}
+#labList button b{display:inline-block;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:var(--lbn,#fff);border:1px solid var(--mut);text-align:center;font-size:11px;margin-right:4px}
+#stage.labnarrow #info{display:none}
+/* ===== Smartphone / responsive ===== */
+@media (max-width:760px) and (orientation:portrait){
+  #bar{gap:2px 10px;padding:5px 10px;font-size:12.5px}
+  .sw{gap:6px}
+  .fcol{gap:2px}
+  .btn,.back{padding:4px 9px;min-height:32px}
+  .stp{min-width:40px;padding:5px 8px}
+  .spv{min-width:80px;padding:6px}
+  .sw{min-height:32px}
+  #gate{left:8px;top:8px;width:min(230px,44vw)}
+  #flow{left:calc(44vw + 16px);right:62px;top:8px;bottom:auto;max-width:none;max-height:40vh;overflow:auto;font-size:12px}
+  #info{left:8px;right:62px;top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none;font-size:12px;padding:6px 10px}
+  #info .big{font-size:17px}
+  #info .leg{font-size:10.5px;gap:1px 8px}
+  #cutSl{right:4px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  #bar{flex-wrap:nowrap;overflow-x:auto;gap:8px 12px;padding:5px 10px;font-size:13px;scrollbar-width:none}
+  #bar>*{flex:none}
+  #bar .sep{display:none}
+  .fcol{flex-direction:row;align-items:center}
+  .btn,.back{padding:4px 10px;min-height:32px}
+  #hint{display:none}
+  #gate{width:132px}
+  #info{max-width:min(250px,34vw);font-size:12px;padding:6px 10px}
+  #info .big{font-size:17px}
+  #info .leg{display:none}
+}
+/* ===== Touch-Bedienung (Smartphone) ===== */
+#btnMenu{display:none}
+.gn rect.hit{fill:transparent!important;stroke:none!important}
+@media (max-width:760px) and (orientation:portrait){
+  #btnMenu{display:inline-block}
+  #bar:not(.open)>.sw,#bar:not(.open)>.grp,#bar:not(.open)>.sep,#bar:not(.open) .fcol>.sw{display:none}
+  #bar{gap:6px 10px;padding:6px 10px;font-size:14px}
+  #bar.open{padding-bottom:10px}
+  .btn,.back{min-height:44px;padding:8px 14px;font-size:14px}
+  .stp{min-width:50px}
+  .spv{min-height:44px;padding:11px 8px;min-width:84px;box-sizing:border-box}
+  .sw{min-height:44px;gap:10px;font-size:14px}
+  .sw .t{width:50px;height:28px;border-radius:15px}
+  .sw .t::after{width:32px;height:32px;top:-3px;left:-3px}
+  .sw input:checked + .t::after{left:21px}
+  #gate{width:min(300px,calc(100vw - 84px))}
+  #flow{left:8px;right:62px;top:auto;bottom:calc(122px + env(safe-area-inset-bottom,0px));max-width:none;max-height:120px}
+  #cutSl{width:56px;right:0}
+  #cutTrack{left:25px}
+  #cutHandle{width:56px;left:-25px;height:48px;margin-top:-24px;line-height:48px;font-size:22px;border-radius:10px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  .btn,.back{min-height:40px;padding:6px 12px}
+  .stp{min-width:44px}
+  .sw{min-height:40px}
+  .sw .t{width:44px;height:24px;border-radius:13px}
+  .sw .t::after{width:28px;height:28px;top:-3px;left:-3px}
+  .sw input:checked + .t::after{left:19px}
+  #gate{width:200px}
+  #cutSl{width:56px;right:0}
+  #cutTrack{left:25px}
+  #cutHandle{width:56px;left:-25px;height:44px;margin-top:-22px;line-height:44px}
+  #info{left:216px;right:auto}
+}
+/* ===== Touch v2: Größen unabhängig von der Layout-Breite (Skalierung --k) ===== */
+html.touch{--k:1}
+html.touch #bar:not(.open)>.sw,html.touch #bar:not(.open)>.grp,html.touch #bar:not(.open)>.sep,html.touch #bar:not(.open) .fcol>.sw{display:none}
+html.touch #btnMenu{display:inline-block}
+html.touch #bar{gap:calc(6px*var(--k)) calc(10px*var(--k));padding:calc(6px*var(--k)) calc(10px*var(--k));font-size:calc(12.5px*var(--k));flex-wrap:wrap;overflow:visible}
+html.touch .btn,html.touch .back{min-height:calc(36px*var(--k));padding:calc(6px*var(--k)) calc(12px*var(--k));font-size:calc(12.5px*var(--k));border-radius:calc(8px*var(--k))}
+html.touch .stp{min-width:calc(40px*var(--k))}
+html.touch .spv{min-height:calc(36px*var(--k));min-width:calc(72px*var(--k));padding:calc(11px*var(--k)) calc(8px*var(--k));box-sizing:border-box;font-size:calc(12.5px*var(--k))}
+html.touch .sw{min-height:calc(36px*var(--k));gap:calc(10px*var(--k));font-size:calc(12.5px*var(--k))}
+html.touch .sw .t{width:calc(40px*var(--k));height:calc(20px*var(--k));border-radius:calc(16px*var(--k))}
+html.touch .sw .t::after{width:calc(24px*var(--k));height:calc(24px*var(--k));top:calc(-1px*var(--k));left:calc(-1px*var(--k))}
+html.touch .sw input:checked + .t::after{left:calc(17px*var(--k))}
+html.touch #gate{width:min(calc(210px*var(--k)),60vw)}
+html.touch #flow{font-size:calc(12px*var(--k))}
+html.touch #info{font-size:calc(12px*var(--k));left:8px;right:calc(62px*var(--k));top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none}
+html.touch #cutSl{width:calc(44px*var(--k));right:0}
+html.touch #cutTrack{left:calc(19px*var(--k))}
+html.touch #cutHandle{width:calc(44px*var(--k));left:calc(-19px*var(--k));height:calc(40px*var(--k));margin-top:calc(-20px*var(--k));line-height:calc(40px*var(--k));font-size:calc(17px*var(--k))}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <button class="back" type="button" id="btnBack">← Übersicht</button>
+    <button class="back" type="button" id="btnMenu" aria-expanded="false" aria-controls="bar">☰ Steuerung</button>
+    <span class="sep"></span>
+    <div class="fcol"><label class="sw"><input type="checkbox" id="swFlow"><span class="t"></span>Kraftfluss</label>
+      <div id="flowBtns" class="fb">
+        <button class="btn" id="fPrev" type="button">◀ Zurück</button>
+        <button class="btn" id="fNext" type="button">Weiter ▶</button>
+        <button class="btn on" id="fAll" type="button">Ganze Linie</button>
+        <button class="btn" id="fLab" type="button" aria-pressed="false">Beschriftung</button>
+      </div></div>
+    <label class="sw"><input type="checkbox" id="swLab"><span class="t"></span>Beschriftung</label>
+    <label class="sw"><input type="checkbox" id="swShift" checked><span class="t"></span>Schaltgabeln</label>
+    <span class="sep"></span>
+    <span class="grp">
+      <button class="btn" id="btnPlay" type="button" aria-pressed="true">Pause</button>
+      <span>Drehzahl</span>
+      <button class="btn stp" id="spDn" type="button" aria-label="Drehzahl verringern" title="Drehzahl verringern (halten = schneller)">▼</button>
+      <output id="spVal" class="spv" aria-live="polite">1.050 min⁻¹</output>
+      <button class="btn stp" id="spUp" type="button" aria-label="Drehzahl erhöhen" title="Drehzahl erhöhen (halten = schneller)">▲</button>
+    </span>
+    <span class="sep"></span>
+    <span class="grp">Ansicht
+      <button class="btn" data-view="front" type="button">Vorne</button>
+      <button class="btn" data-view="iso" type="button">Schräg</button>
+      <button class="btn" data-view="top" type="button">Oben</button>
+    </span>
+  </div>
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <svg id="lab" aria-hidden="true"></svg>
+    <div id="hint">Ziehen: drehen · Rechtsklick/Shift: verschieben · Mausrad: zoomen · Bauteil anfahren: Name</div>
+    <div id="flow">
+      <div class="txt" id="fTxt"></div>
+    </div>
+    <div id="cutSl"><div id="cutTrack"><div id="cutHandle" tabindex="0" role="slider" aria-label="Schnittbereich von oben nach unten" aria-orientation="vertical" title="Schnittgrenze verschieben (Griff nach unten ziehen = Schnitt)">⇕</div></div></div>
+    <div id="info">
+      <div class="big">Gang <span id="iG">N</span></div>
+      <div>Übersetzung i = <b id="iI">–</b></div>
+      <div>Antrieb <b id="iIn">0</b> → Abtrieb <b id="iOut">0</b> min⁻¹</div>
+      <div class="leg">
+        <span><i style="background:#2f6bff"></i>Eingangswelle</span>
+        <span><i style="background:#7fcf1f"></i>Ausgangswelle</span>
+        <span><i style="background:#f97316"></i>Vorgelegewelle</span>
+        <span><i style="background:#e5393a"></i>Losräder</span>
+        <span><i style="background:#12c27a"></i>Synchronkörper</span>
+        <span><i style="background:#f0307f"></i>Schaltstück</span>
+        <span><i style="background:#fbc700"></i>Synchronring</span>
+        <span><i style="background:#3f4a5c"></i>Schaltmuffe</span>
+      </div>
+      <details class="zt"><summary>Zähnezahlen</summary>Rad Eingangswelle / Rad Ausgangswelle<br>1. Gang Z1 / Z2: 17 / 63<br>2. Gang Z3 / Z4: 26 / 54<br>3. Gang Z5 / Z6: 34 / 46<br>4. Gang Z7 / Z8: 40 / 40<br>5. Gang Z9 / Z10: 46 / 34<br>Rückwärts Z11 / Z12 / Z13: 18 / 18 / 54<br>Achsabstand 100 mm. Vorwärts dreht der Abtrieb gegen den Antrieb, rückwärts gleichsinnig.</details>
+    </div>
+    <div id="gate">
+      <svg id="gsvg" viewBox="-34 0 254 172" role="group" aria-label="Schaltschema">
+        <defs>
+          <radialGradient id="bg" cx="38%" cy="32%" r="75%">
+            <stop offset="0" stop-color="#f7c3b3"/><stop offset=".5" stop-color="#df6144"/><stop offset="1" stop-color="#a8381f"/>
+          </radialGradient>
+        </defs>
+        <path class="lane" d="M40 42V128M110 42V128M180 42V128M40 85H180"/>
+        <g class="gn" data-g="1" role="button" tabindex="0" aria-label="1. Gang einlegen"><rect x="23" y="7" width="34" height="26" rx="7"/><text x="40" y="20">1</text></g>
+        <g class="gn" data-g="3" role="button" tabindex="0" aria-label="3. Gang einlegen"><rect x="93" y="7" width="34" height="26" rx="7"/><text x="110" y="20">3</text></g>
+        <g class="gn" data-g="5" role="button" tabindex="0" aria-label="5. Gang einlegen"><rect x="163" y="7" width="34" height="26" rx="7"/><text x="180" y="20">5</text></g>
+        <g class="gn" data-g="2" role="button" tabindex="0" aria-label="2. Gang einlegen"><rect x="23" y="141" width="34" height="26" rx="7"/><text x="40" y="154">2</text></g>
+        <g class="gn" data-g="4" role="button" tabindex="0" aria-label="4. Gang einlegen"><rect x="93" y="141" width="34" height="26" rx="7"/><text x="110" y="154">4</text></g>
+        <g class="gn" data-g="6" role="button" tabindex="0" aria-label="Rückwärtsgang einlegen"><rect x="163" y="141" width="34" height="26" rx="7"/><text x="180" y="154">R</text></g>
+        <g class="gn" data-g="0" role="button" tabindex="0" aria-label="Neutral (Leerlauf) einlegen"><rect x="-21" y="72" width="34" height="26" rx="7"/><text x="-4" y="85">N</text></g>
+        <circle id="ball" cx="110" cy="85" r="15" fill="url(#bg)" stroke="#8d2f1a" stroke-width="1"/>
+      </svg>
+    </div>
+  </div>
+</div>
+<div id="tip"></div>
+<div id="err" role="alert"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE||document.write('<script src="three.min.js"><\/script>')</script>
+<script>
+function showErr(m){var e=document.getElementById('err');e.style.display='block';e.innerHTML=m;}
+window.addEventListener('error',function(ev){ if(window.THREE){showErr('<b>Fehler im Modell:</b> '+(ev.message||'unbekannt')+'<br>Bitte Seite neu laden oder Chrome/Safari verwenden.');}});
+if(!window.THREE){showErr('<b>3D-Bibliothek (three.js) nicht geladen.</b><br>Das Modell braucht einmalig Internet. Bitte die Datei direkt im Browser (Chrome/Safari) öffnen, nicht in der Vorschau einer App. Alternativ den Freigabe-Link verwenden.');}
+else{ try{ var _t=document.createElement('canvas'),_g=_t.getContext('webgl2')||_t.getContext('webgl'); if(!_g)showErr('<b>WebGL ist auf diesem Gerät/Browser deaktiviert.</b> Bitte Chrome oder Safari verwenden.'); }catch(x){} }
+</script>
+<script>
+if(window.THREE)(function(){
+'use strict';
+const T=THREE, PI=Math.PI, TAU=PI*2;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const frac=v=>v-Math.floor(v);
+const sstep=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
+const NS='http://www.w3.org/2000/svg';
+const fmt=(v,d)=>v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ================= Getriebedaten ================= */
+const MOD=2.5, CD=100, BETA=20*PI/180, TRAVEL=12, NSP=36, PITCH=TAU/NSP;
+const Zt={i1:17,o1:63,i2:26,o2:54,i3:34,o3:46,i4:40,o4:40,i5:46,o5:34,iR:18,idl:18,oR:54};   // i = Zahnrad auf der Eingangswelle (oben), o = Zahnrad auf der Ausgangswelle (unten); Summe 80 Zähne = Achsabstand 100 mm
+const HX={m12:45,m34:135,m5R:235};            // Mitte der Synchronnaben (x)
+const GOFF=33.5;                              // Hub-Mitte → Radmitte
+const GX={g1:HX.m12-GOFF,g2:HX.m12+GOFF,g3:HX.m34-GOFF,g4:HX.m34+GOFF,g5:HX.m5R-GOFF,gR:HX.m5R+GOFF};
+const rpT=MOD*Zt.iR/2, rpB=MOD*Zt.oR/2, rpi=MOD*Zt.idl/2;
+const dT=rpT+rpi, dB=rpB+rpi;                 // Abstand Rücklaufrad – obere / untere Achse
+const IY=(dB*dB-dT*dT-CD*CD)/(2*CD);          // Lage des Rücklaufrades (y,z), obere Achse bei y = 0
+const IZ=-Math.sqrt(dT*dT-IY*IY);
+
+const COL={in:0x2f6bff,out:0x7fcf1f,cs:0xf97316,csg:0x5a93ff,ofx:0xb5e65c,loose:0xe5393a,
+  hub:0x12c27a,key:0xf0307f,sleeve:0x3f4a5c,ring:0xfbc700,clutch:0x20b2aa,
+  bear:0xe3e8ee,ball:0xd4e8fb,cage:0x9aa5b4,house:0x6b7a90,fork:0xb0793a,rail:0xcbd3de,idl:0xa4adbb};
+
+/* ================= Geometrie-Helfer ================= */
+function signedVolume(p){
+  let v=0;
+  for(let i=0;i<p.length;i+=9){
+    const ax=p[i],ay=p[i+1],az=p[i+2],bx=p[i+3],by=p[i+4],bz=p[i+5],cx=p[i+6],cy=p[i+7],cz=p[i+8];
+    v+=ax*(by*cz-bz*cy)+ay*(bz*cx-bx*cz)+az*(bx*cy-by*cx);
+  }
+  return v/6;
+}
+function toGeo(pos,nor){
+  if(signedVolume(pos)<0){
+    for(let i=0;i<pos.length;i+=9){
+      for(let k=0;k<3;k++){
+        let t=pos[i+3+k]; pos[i+3+k]=pos[i+6+k]; pos[i+6+k]=t;
+        if(nor){ t=nor[i+3+k]; nor[i+3+k]=nor[i+6+k]; nor[i+6+k]=t; }
+      }
+    }
+    if(nor) for(let i=0;i<nor.length;i++) nor[i]=-nor[i];
+  }
+  const g=new T.BufferGeometry();
+  g.setAttribute('position',new T.BufferAttribute(new Float32Array(pos),3));
+  if(nor) g.setAttribute('normal',new T.BufferAttribute(new Float32Array(nor),3));
+  else g.computeVertexNormals();
+  return g;
+}
+/* Drehkörper: Profil (x,r) im Uhrzeigersinn – außen von links nach rechts */
+function revolve(pr,seg){
+  seg=seg||72;
+  const pos=[],nor=[],n=pr.length;
+  for(let i=0;i<n;i++){
+    const p=pr[i],q=pr[(i+1)%n];
+    const dx=q[0]-p[0],dr=q[1]-p[1],len=Math.hypot(dx,dr);
+    if(len<1e-9||(p[1]===0&&q[1]===0)) continue;
+    const nx=-dr/len,nr=dx/len;
+    for(let j=0;j<seg;j++){
+      const a0=j/seg*TAU,a1=(j+1)/seg*TAU;
+      const c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
+      const A=[p[0],p[1]*c0,p[1]*s0],B=[p[0],p[1]*c1,p[1]*s1],C=[q[0],q[1]*c1,q[1]*s1],D=[q[0],q[1]*c0,q[1]*s0];
+      const nA=[nx,nr*c0,nr*s0],nB=[nx,nr*c1,nr*s1];
+      pos.push(...A,...B,...C,...A,...C,...D);
+      nor.push(...nA,...nB,...nB,...nA,...nB,...nA);
+    }
+  }
+  return toGeo(pos,nor);
+}
+/* Evolventen-Zahnkontur (Eingriffswinkel 20°), Zahnmitte bei (n+0.25)·Teilung */
+function toothPts(N,rp,rTip,rRoot,flank,backlash){
+  flank=flank||5; backlash=backlash||0.93;
+  const al=20*PI/180, rb=rp*Math.cos(al), D=TAU/N;
+  const inv=a=>Math.tan(a)-a;
+  const psiP=PI/(2*N)*backlash;
+  const psi=r=>{ if(r<rb) r=rb; return psiP+inv(al)-inv(Math.acos(rb/r)); };
+  const rs=Math.max(rb,rRoot), pts=[];
+  for(let n=0;n<N;n++){
+    const tc=(n+0.25)*D;
+    if(rRoot<rb) pts.push([tc-psi(rb),rRoot]);
+    for(let i=0;i<=flank;i++){ const r=rs+(rTip-rs)*i/flank; pts.push([tc-psi(r),r]); }
+    pts.push([tc,rTip]);
+    for(let i=flank;i>=0;i--){ const r=rs+(rTip-rs)*i/flank; pts.push([tc+psi(r),r]); }
+    if(rRoot<rb) pts.push([tc+psi(rb),rRoot]);
+    pts.push([tc+D/2,rRoot]);
+  }
+  return pts;
+}
+/* einfache Trapez-Lappen (Flansche) */
+function trapPts(N,rTip,rRoot,prof){
+  const D=TAU/N,pts=[];
+  for(let n=0;n<N;n++) for(const p of prof) pts.push([(n+p[0])*D,p[1]?rTip:rRoot]);
+  return pts;
+}
+/* Nuten in eine Kontur schneiden (Winkel-Fenster um Mittelpunkte) */
+function slotPts(pts,centers,hw,rOut,rFloor){
+  const norm=a=>{ a=(a+PI)%TAU; if(a<0) a+=TAU; return a-PI; };
+  let list=pts.map(p=>[norm(p[0]),p[1]]);
+  const inWin=a=>centers.some(c=>Math.abs(norm(a-c))<=hw);
+  list=list.filter(p=>!inWin(p[0]));
+  centers.forEach(c=>{
+    const a0=c-hw,a1=c+hw;
+    list.push([a0-1e-6,rOut],[a0,rFloor],[c,rFloor],[a1,rFloor],[a1+1e-6,rOut]);
+  });
+  list.sort((a,b)=>a[0]-b[0]);
+  return list;
+}
+/* Prismatischer Körper aus Polarkontur (außen) und Bohrung/Innenkontur, Achse = x */
+function polarSolid(o){
+  const out=o.outer,K=out.length,x0=o.x0,x1=o.x1,inn=o.inner||0;
+  const tanB=o.tanB||0,hand=o.hand||1,rp=o.rp||1,xc=(x0+x1)/2,L=tanB?4:1;
+  const tw=x=>hand*(x-xc)*tanB/rp;
+  const arr=Array.isArray(inn);
+  const ri0=k=>arr?inn[k][1]:inn;
+  const rin=(r,x)=>chi?r+Math.max(0,chi-Math.min(x-x0,x1-x)):r;
+  const hasIn=arr||inn>0;
+  const P=(x,a,r)=>[x,r*Math.cos(a),r*Math.sin(a)];
+  const pos=[];
+  const tri=(a,b,c)=>{pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);};
+  const ch=o.ch||0, rT=o.rTip||0, chi=o.chi||0;
+  let xs=[]; for(let l=0;l<=L;l++) xs.push(x0+(x1-x0)*l/L);
+  if(ch||chi){ if(ch) xs.push(x0+ch,x1-ch); if(chi) xs.push(x0+chi,x1-chi); xs=xs.filter((v,i)=>xs.findIndex(w=>Math.abs(w-v)<1e-6)===i).sort((p,q)=>p-q); }
+  const cl=(r,x)=>ch?Math.min(r,rT-ch+Math.min(x-x0,x1-x)):r;
+  for(let k=0;k<K;k++){
+    const k2=(k+1)%K, a=out[k][0], a2=out[k2][0], ro=out[k][1], ro2=out[k2][1], rn=ri0(k), rn2=ri0(k2);
+    for(let l=0;l<xs.length-1;l++){
+      const xa=xs[l],xb=xs[l+1],ta=tw(xa),tb=tw(xb);
+      const A=P(xa,a+ta,cl(ro,xa)),B=P(xa,a2+ta,cl(ro2,xa)),C=P(xb,a2+tb,cl(ro2,xb)),Dd=P(xb,a+tb,cl(ro,xb));
+      tri(A,B,C); tri(A,C,Dd);
+      if(hasIn){
+        const A2=P(xa,a+ta,rin(rn,xa)),B2=P(xa,a2+ta,rin(rn2,xa)),C2=P(xb,a2+tb,rin(rn2,xb)),D2=P(xb,a+tb,rin(rn,xb));
+        tri(A2,C2,B2); tri(A2,D2,C2);
+      }
+    }
+    const da=((a2-a)%TAU+TAU)%TAU;
+    if(da<1e-9||da>TAU-1e-9) continue;   // radiale Hinterschnitt-Stufe: Stirnfläche hat hier keine Breite (sonst entarten Dreiecke)
+    const t1=tw(x1),t0=tw(x0);
+    const O1=P(x1,a+t1,cl(ro,x1)),O1b=P(x1,a2+t1,cl(ro2,x1)),O0=P(x0,a+t0,cl(ro,x0)),O0b=P(x0,a2+t0,cl(ro2,x0));
+    if(hasIn){
+      const I1=P(x1,a+t1,rin(rn,x1)),I1b=P(x1,a2+t1,rin(rn2,x1)),I0=P(x0,a+t0,rin(rn,x0)),I0b=P(x0,a2+t0,rin(rn2,x0));
+      tri(O1,O1b,I1b); tri(O1,I1b,I1);
+      tri(O0,I0b,O0b); tri(O0,I0,I0b);
+    }else{
+      tri(O1,O1b,[x1,0,0]);
+      tri(O0b,O0,[x0,0,0]);
+    }
+  }
+  return toGeo(pos,null);
+}
+function gearGeo(o){
+  const pts=o.pts||(o.prof?trapPts(o.N,o.rTip,o.rRoot,o.prof):toothPts(o.N,o.rp,o.rTip,o.rRoot));
+  return polarSolid({chi:o.chi,ch:o.ch,rTip:o.rTip,outer:pts,inner:o.bore||0,x0:o.x0,x1:o.x1,tanB:o.beta?Math.tan(o.beta):0,hand:o.hand||1,rp:o.rp});
+}
+function plateGeo(x0,x1){
+  const s=new T.Shape(),X=40,Y0=-130,Y1=42,c=14;   // schlankes Gehäuse: nur so groß wie die Lagersitze
+  s.moveTo(-X+c,Y0); s.lineTo(X-c,Y0); s.lineTo(X,Y0+c); s.lineTo(X,Y1-c); s.lineTo(X-c,Y1);
+  s.lineTo(-X+c,Y1); s.lineTo(-X,Y1-c); s.lineTo(-X,Y0+c);
+  const h1=new T.Path(); h1.absarc(0,0,26,0,TAU,true); s.holes.push(h1);
+  const h2=new T.Path(); h2.absarc(0,-CD,26,0,TAU,true); s.holes.push(h2);
+  const g=new T.ExtrudeGeometry(s,{depth:x1-x0,bevelEnabled:false,curveSegments:48});
+  g.rotateY(PI/2); g.translate(x0,0,0);
+  return g;
+}
+/* runder Flansch: Scheibe mit Mittelbohrung und Schraubenlöchern */
+function flangeGeo(x0,x1,R,bore,nh,rb,rh){
+  const sh=new T.Shape(); sh.absarc(0,0,R,0,TAU,false);
+  const h=new T.Path(); h.absarc(0,0,bore,0,TAU,true); sh.holes.push(h);
+  for(let i=0;i<nh;i++){ const a=i/nh*TAU+PI/nh; const q=new T.Path(); q.absarc(rb*Math.cos(a),rb*Math.sin(a),rh,0,TAU,true); sh.holes.push(q); }
+  const g=new T.ExtrudeGeometry(sh,{depth:x1-x0,bevelEnabled:false,curveSegments:40});
+  g.rotateY(PI/2); g.translate(x0,0,0);
+  return g;
+}
+/* Schaltgabel: Gabelbügel (Kreisbogen ~210°) für die Muffennut, Gabelarm mit Kragen, Führungsbock */
+function forkArcGeo(xh){
+  const a0=PI/2-105*PI/180, a1=PI/2+105*PI/180, sh=new T.Shape();
+  sh.absarc(0,0,44.6,a0,a1,false); sh.absarc(0,0,41.4,a1,a0,true);
+  const g=new T.ExtrudeGeometry(sh,{depth:5,bevelEnabled:false,curveSegments:40});
+  g.rotateY(PI/2); g.translate(xh-2.5,0,0); return g;
+}
+function forkArmGeo(xh){
+  const sh=new T.Shape(), P=[[-2.5,43],[2.5,43],[2.5,47],[6,49.5],[4.2,70],[4.8,86],[-4.8,86],[-4.2,70],[-6,49.5],[-2.5,47]];
+  sh.moveTo(xh+P[0][0],P[0][1]); for(let i=1;i<P.length;i++) sh.lineTo(xh+P[i][0],P[i][1]);
+  const g=new T.ExtrudeGeometry(sh,{depth:9,bevelEnabled:false}); g.translate(0,0,-4.5); return g;
+}
+function guideGeo(x0,x1,zc,yc){
+  const sh=new T.Shape(); sh.moveTo(-9,-9); sh.lineTo(9,-9); sh.lineTo(9,9); sh.lineTo(-9,9);
+  const h=new T.Path(); h.absarc(0,0,5.25,0,TAU,true); sh.holes.push(h);
+  const g=new T.ExtrudeGeometry(sh,{depth:x1-x0,bevelEnabled:false,curveSegments:24});
+  g.rotateY(PI/2); g.translate(x0,yc,zc); return g;
+}
+/* Schaltstück (Druckstück) der Borg-Warner-Synchronisierung: Körper + Rastnase, radial entlang +y */
+function keyGeo(xh){
+  const s=new T.Shape();
+  s.moveTo(-7.2,25.5); s.lineTo(7.2,25.5); s.lineTo(7.2,30.8); s.lineTo(3.2,30.8);
+  s.lineTo(2.2,36); s.lineTo(-2.2,36); s.lineTo(-3.2,30.8); s.lineTo(-7.2,30.8);
+  const g=new T.ExtrudeGeometry(s,{depth:6,bevelEnabled:false});
+  g.translate(xh,0,-3);
+  return g;
+}
+function springGeo(xh){
+  class Helix extends T.Curve{ getPoint(t,o){ const a=t*3.5*TAU; return (o||new T.Vector3()).set(xh+2.2*Math.cos(a),20.6+t*4.8,2.2*Math.sin(a)); } }
+  return new T.TubeGeometry(new Helix(),90,0.4,6,false);
+}
+const gSpec=(N,xc,bore,hand,beta)=>{
+  const rp=MOD*N/2;
+  return {N:N,rRoot:rp-1.25*MOD,rTip:rp+MOD,rp:rp,x0:xc-8,x1:xc+8,bore:bore,hand:hand,beta:beta};
+};
+const dogPts=toothPts(NSP,32.25,33.4,30.5);   // gemeinsame Schaltverzahnung (Nabe, Ring, Klauen, Muffe)
+
+/* Zahnflanken-Phasen (korrektes Kämmen) */
+const phM=Z=>PI-PI/(2*Z);                 // Rad auf Hauptachse, Partner bei α=π
+const phC=C=>PI/(2*C);                    // Vorgelegerad, Partner bei α=0
+function solvePhase(Zk,thk,phiK,Zn){
+  const uK=frac(Zk*(phiK-thk)/TAU-0.25);
+  const uN=frac(0.5-uK);
+  return (phiK+PI)-TAU*(uN+0.25)/Zn;
+}
+const thTR=0;                                  // Festrad Rückwärtsgang (obere Achse): Bezugsphase
+const phiTI=Math.atan2(IZ,IY);                 // oberes Rad → Rücklaufrad
+const thIdl=solvePhase(Zt.iR,thTR,phiTI,Zt.idl);
+const phiIB=Math.atan2(-IZ,-CD-IY);            // Rücklaufrad → untere Achse
+const thOR=solvePhase(Zt.idl,thIdl,phiIB,Zt.oR);
+
+/* ================= Szene ================= */
+const cv=$('cv'), stage=$('stage');
+const renderer=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true,stencil:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.localClippingEnabled=true;
+renderer.setClearColor(0x000000,0);
+const scene=new T.Scene();
+const FOV=32;
+const cam=new T.OrthographicCamera(-100,100,100,-100,-5000,5000);   // orthografisch: Vorderansicht ohne perspektivische Verzerrung
+scene.add(new T.AmbientLight(0xffffff,0.62));
+scene.add(new T.HemisphereLight(0xffffff,0x8899aa,0.35));
+const dl=new T.DirectionalLight(0xffffff,0.85); dl.position.set(180,320,420); scene.add(dl);
+const dl2=new T.DirectionalLight(0xffffff,0.3); dl2.position.set(-300,-120,220); scene.add(dl2);
+
+const clipPlane=new T.Plane(new T.Vector3(0,0,-1),1e5);   // z>0 wird bei Schnitt entfernt
+const wipePlane=new T.Plane(new T.Vector3(0,-1,0),-50);   // Schnitt nur oberhalb der Grenze y > h
+let sectionOn=false;
+
+/* gegenläufige Schraffuren: H1 45° eng, H2 135° eng, H3 45° weit, H4 135° weit */
+function makeHatch(dir){
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  g.fillStyle='#fff'; g.fillRect(0,0,64,64);
+  g.strokeStyle='#3d4552'; g.lineWidth=7;
+  g.beginPath();
+  for(let k=-1;k<=1;k++){
+    if(dir>=0){ g.moveTo(k*64,64); g.lineTo(k*64+64,0); }
+    if(dir<=0){ g.moveTo(k*64,0); g.lineTo(k*64+64,64); }
+  }
+  g.stroke();
+  const t=new T.CanvasTexture(c);
+  t.wrapS=t.wrapT=T.RepeatWrapping; t.anisotropy=4;
+  return t;
+}
+const texUp=makeHatch(1), texDn=makeHatch(-1), texX=makeHatch(0);
+const HATCH={H1:{tex:texUp,tile:6},H2:{tex:texDn,tile:6},H3:{tex:texUp,tile:11},H4:{tex:texDn,tile:11},H5:{tex:texX,tile:8}};
+
+const parts=[]; let order=1;
+const WHITE=new T.Color(0xffffff), GRAY=new T.Color(0xb7bcc4), FLOWCOL=0xffb400;
+
+function makeStencil(geo,ro){
+  const g=new T.Group();
+  const mk=(side,op)=>{
+    const m=new T.MeshBasicMaterial({depthWrite:false,depthTest:false,colorWrite:false,side:side,
+      clippingPlanes:[clipPlane,wipePlane],clipIntersection:true,stencilWrite:true,stencilFunc:T.AlwaysStencilFunc,
+      stencilFail:op,stencilZFail:op,stencilZPass:op});
+    const me=new T.Mesh(geo,m); me.renderOrder=ro; return me;
+  };
+  g.add(mk(T.BackSide,T.IncrementWrapStencilOp));
+  g.add(mk(T.FrontSide,T.DecrementWrapStencilOp));
+  return g;
+}
+
+/* Kantenlinien: nur echte Kanten zwischen genau zwei Flächen mit Knick > Schwelle.
+   Offene bzw. nicht verschweißte Kanten (z. B. Triangulierung der Seitenflächen) werden bewusst nicht gezeichnet. */
+function edgeGeo(geo,thrDeg){
+  const pos=geo.attributes.position, idx=geo.index, nt=(idx?idx.count:pos.count)/3, Q=1000;
+  const key=i=>Math.round(pos.getX(i)*Q)+','+Math.round(pos.getY(i)*Q)+','+Math.round(pos.getZ(i)*Q);
+  const map=new Map(), cos=Math.cos(thrDeg*PI/180);
+  const A=new T.Vector3(),B=new T.Vector3(),C=new T.Vector3();
+  for(let t=0;t<nt;t++){
+    const v=[idx?idx.getX(3*t):3*t, idx?idx.getX(3*t+1):3*t+1, idx?idx.getX(3*t+2):3*t+2];
+    A.fromBufferAttribute(pos,v[0]); B.fromBufferAttribute(pos,v[1]); C.fromBufferAttribute(pos,v[2]);
+    const n=B.clone().sub(A).cross(C.clone().sub(A)); if(n.length()<1e-3) continue; n.normalize();   // entartete Dreiecke ignorieren
+    const k=v.map(key);
+    for(let e=0;e<3;e++){
+      const i=e,j=(e+1)%3; if(k[i]===k[j]) continue;
+      const kk=k[i]<k[j]?k[i]+'|'+k[j]:k[j]+'|'+k[i];
+      let en=map.get(kk); if(!en){ en={n:[],a:v[i],b:v[j]}; map.set(kk,en); }
+      en.n.push(n);
+    }
+  }
+  const out=[];
+  map.forEach(en=>{
+    if(en.n.length!==2) return;
+    if(en.n[0].dot(en.n[1])<cos){
+      out.push(pos.getX(en.a),pos.getY(en.a),pos.getZ(en.a),pos.getX(en.b),pos.getY(en.b),pos.getZ(en.b));
+    }
+  });
+  const g=new T.BufferGeometry(); g.setAttribute('position',new T.BufferAttribute(new Float32Array(out),3)); return g;
+}
+function addPart(o){
+  const mat=new T.MeshStandardMaterial({color:o.color,metalness:0.22,roughness:0.42,clippingPlanes:[clipPlane,wipePlane],clipIntersection:true,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+  const holder=new T.Group(), rotor=new T.Group(), body=new T.Group();
+  const ay=o.ay||0, az=o.az||0;
+  rotor.position.set(0,ay,az); holder.add(rotor); rotor.add(body);
+  const mesh=new T.Mesh(o.geo,mat); body.add(mesh);
+  const emat=new T.LineBasicMaterial({color:0x151b26,transparent:true,opacity:0.8,clippingPlanes:[clipPlane,wipePlane],clipIntersection:true});
+  const edges=new T.LineSegments(edgeGeo(o.geo,32),emat); body.add(edges);
+  const p={name:o.name,mesh:mesh,mat:mat,emat:emat,holder:holder,rotor:rotor,body:body,rot:o.rot||null,phase:o.phase||0,
+    slide:o.slide||null,ring:o.ring||null,keyOf:o.keyOf||null,tags:o.tags||[],group:o.group||'core',
+    color:new T.Color(o.color),capZ:null,capY:null,capMat:null,stencil:null,hatch:o.hatch||'H1',crossZ:false,ymin:0,ymax:0,az:az};
+  mesh.userData.part=p;
+  const g=o.geo; g.computeBoundingBox(); const bb=g.boundingBox;
+  let rmax=0;
+  if(o.rot){
+    const a=g.attributes.position.array;
+    for(let i=0;i<a.length;i+=3){ const r=Math.hypot(a[i+1],a[i+2]); if(r>rmax) rmax=r; }
+  }
+  let zmin,zmax,ymin,ymax;
+  if(o.rot){ zmin=az-rmax; zmax=az+rmax; ymin=ay-rmax; ymax=ay+rmax; }
+  else{ zmin=bb.min.z+az; zmax=bb.max.z+az; ymin=bb.min.y+ay; ymax=bb.max.y+ay; }
+  p.ymin=ymin; p.ymax=ymax; p.crossZ=(zmax>0.001&&zmin<-0.001);
+  const ro=order++, H=HATCH[p.hatch];
+  p.stencil=makeStencil(g,ro); body.add(p.stencil); p.stencil.visible=false;
+  p.capMat=new T.MeshBasicMaterial({color:0xffffff,map:H.tex,side:T.DoubleSide,
+    stencilWrite:true,stencilRef:0,stencilFunc:T.NotEqualStencilFunc,
+    stencilFail:T.ReplaceStencilOp,stencilZFail:T.ReplaceStencilOp,stencilZPass:T.ReplaceStencilOp});
+  const xw=bb.max.x-bb.min.x+0.5, xc=(bb.min.x+bb.max.x)/2;
+  const mkCap=(w,h,flat,px,py,pz)=>{
+    const pg=new T.PlaneGeometry(w,h), uv=pg.attributes.uv;
+    for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*w/H.tile,uv.getY(i)*h/H.tile);
+    if(flat) pg.rotateX(-PI/2);
+    const cap=new T.Mesh(pg,p.capMat);
+    cap.position.set(px,py,pz); cap.renderOrder=ro+0.1;
+    cap.onAfterRender=function(r){ r.clearStencil(); };
+    cap.visible=false; holder.add(cap); return cap;
+  };
+  if(p.crossZ) p.capZ=mkCap(xw,ymax-ymin+0.5,false,xc,(ymin+ymax)/2,0);       // Längsschnitt (Ebene z = 0)
+  scene.add(holder); parts.push(p);
+  return p;
+}
+
+/* ================= Bauteile ================= */
+const ENGPH={};     // Phase der Klauenverzahnung je Gang (für Ausrichtung beim Einrücken)
+
+const ZN={i1:1,o1:2,i2:3,o2:4,i3:5,o3:6,i4:7,o4:8,i5:9,o5:10,iR:11,idl:12,oR:13};
+const RY=92;   // Abstand der Schaltstangen von der Wellenachse (oben nach oben, unten nach unten)   // Zahnrad-Nummern Z1 …
+/* Nadellager: zwei Nadelkränze mit Käfig dazwischen */
+function needle(x0,x1,rIn,rOut,name,extra){
+  const L=(x1-x0-3)/2, ex=extra||{};
+  [[x0,x0+L],[x1-L,x1]].forEach(r=>addPart(Object.assign({name:name+' – Nadelkranz',geo:revolve([[r[0],rOut],[r[1],rOut],[r[1],rIn],[r[0],rIn]],48),color:COL.bear,hatch:'H5'},ex)));
+  addPart(Object.assign({name:name+' – Käfig',geo:revolve([[x0+L,rOut-0.6],[x1-L,rOut-0.6],[x1-L,rIn+0.6],[x0+L,rIn+0.6]],48),color:COL.cage,hatch:'H3'},ex));
+}
+/* Rillenkugellager: Innenring, Außenring, Kugelreihe */
+const BBS=[];
+function ballBearing(x0,x1,rs,ro,ay,nm,shaft){
+  const ri=rs+4, wo=Math.min(4,(ro-rs)*0.22), rO=ro-wo, gap=rO-ri, rb=gap/2-0.15, rm=(ri+rO)/2, ex={ay:ay,group:'house'};
+  const bk='bb'+BBS.length; BBS.push({key:bk,shaft:shaft,ratio:1});
+  addPart(Object.assign({name:nm+' – Innenring',geo:revolve([[x0,ri],[x1,ri],[x1,rs],[x0,rs]],64),color:COL.bear,hatch:'H3'},ex));
+  addPart(Object.assign({name:nm+' – Außenring',geo:revolve([[x0,ro],[x1,ro],[x1,rO],[x0,rO]],64),color:COL.bear,hatch:'H3'},ex));
+  // Kugelreihe: einzelne Kugeln (zwei davon liegen in der Schnittebene), zu einem Bauteil zusammengefasst
+  const xm=(x0+x1)/2, NB=14, P=[], N=[];
+  for(let k=0;k<NB;k++){
+    const th=k/NB*TAU, sg=new T.SphereGeometry(rb,20,14).toNonIndexed();
+    sg.translate(xm,rm*Math.cos(th),rm*Math.sin(th));
+    P.push(sg.attributes.position.array); N.push(sg.attributes.normal.array);
+  }
+  const cat=A=>{ let n=0; A.forEach(x=>n+=x.length); const o=new Float32Array(n); let i=0; A.forEach(x=>{ o.set(x,i); i+=x.length; }); return o; };
+  const bg=new T.BufferGeometry();
+  bg.setAttribute('position',new T.BufferAttribute(cat(P),3)); bg.setAttribute('normal',new T.BufferAttribute(cat(N),3));
+  addPart(Object.assign({name:nm+' – Kugelreihe (Wälzkörper)',geo:bg,color:COL.ball,hatch:'H5'},ex));
+  // Käfig: 14 Stege zwischen den Kugeln + Haltering, läuft mit dem Kugelsatz um
+  { const xa=xm+rb+0.4, xb=xm+rb+1.9, tx0=xm-rb*0.6, P2=[], N2=[];
+    for(let k=0;k<NB;k++){
+      const bx=new T.BoxGeometry(xb-tx0,rb*1.1,1.7).toNonIndexed();
+      bx.translate((tx0+xb)/2,rm,0); bx.rotateX((k+0.5)/NB*TAU);
+      P2.push(bx.attributes.position.array); N2.push(bx.attributes.normal.array);
+    }
+    const cg=new T.BufferGeometry();
+    cg.setAttribute('position',new T.BufferAttribute(cat(P2),3)); cg.setAttribute('normal',new T.BufferAttribute(cat(N2),3));
+    const cg1=addPart(Object.assign({name:nm+' – Käfig (Stege)',geo:cg,color:0xd9a441,hatch:'H3'},ex));
+    const cg2=addPart(Object.assign({name:nm+' – Käfig (Haltering)',geo:revolve([[xa,rm+1.3],[xb,rm+1.3],[xb,rm-1.3],[xa,rm-1.3]],48),color:0xd9a441,hatch:'H3'},ex));
+    const gr=[cg1,cg2]; gr.forEach(q=>q.grp=gr); }
+}
+
+// --- Eingangswelle (obere Achse) mit Antriebsflansch
+const pInSh=addPart({name:'Eingangswelle',geo:revolve([[-120,10],[-118,12],[-104.05,12],[-104.05,20],[-103.935,18.829],[-103.593,17.704],[-103.039,16.667],[-102.293,15.757],[-101.383,15.011],[-100.346,14.457],[-99.221,14.115],[-98.05,14],[HX.m34-42,14],[HX.m34-42,16.5],[HX.m34-39.5,18],[HX.m34+39.5,18],[HX.m34+42,16.5],[HX.m34+42,14],[289,14],[291,12],[291,0],[-120,0]]),color:COL.in,rot:'in',tags:['in'],hatch:'H1'});
+const pInFl=addPart({name:'Antriebsflansch (runde Scheibe mit Schraubenlöchern)',geo:flangeGeo(-118,-104,34,12,6,26,3.2),color:COL.in,rot:'in',tags:['in'],hatch:'H1'});
+// --- Ausgangswelle (untere Achse) mit Abtriebsflansch, auf derselben Seite wie der Antrieb
+const pOutSh=addPart({name:'Ausgangswelle',geo:revolve([[-120,10],[-118,12],[-104.05,12],[-104.05,20],[-103.935,18.829],[-103.593,17.704],[-103.039,16.667],[-102.293,15.757],[-101.383,15.011],[-100.346,14.457],[-99.221,14.115],[-98.05,14],[HX.m12-42,14],[HX.m12-42,16.5],[HX.m12-39.5,18],[HX.m12+39.5,18],[HX.m12+42,16.5],[HX.m12+42,14],[HX.m5R-42,14],[HX.m5R-42,16.5],[HX.m5R-39.5,18],[HX.m5R+39.5,18],[HX.m5R+42,16.5],[HX.m5R+42,14],[289,14],[291,12],[291,0],[-120,0]]),color:COL.out,ay:-CD,rot:'out',tags:['out'],hatch:'H2'});
+const pOutFl=addPart({name:'Abtriebsflansch (runde Scheibe mit Schraubenlöchern)',geo:flangeGeo(-118,-104,40,12,6,31,3.6),color:COL.out,ay:-CD,rot:'out',tags:['fl'],hatch:'H2'});
+{ const g1=[pInSh,pInFl]; g1.forEach(q=>q.grp=g1); pInSh.seams=pInFl.seams=[['y',12,-118,-104,0]];
+  const g2=[pOutSh,pOutFl]; g2.forEach(q=>q.grp=g2); pOutSh.seams=pOutFl.seams=[['y',12,-118,-104,-CD]]; }
+
+/* ---- Borg-Warner-Synchronisierung: Muffen 1/2 und 5/R auf der Ausgangswelle (unten), Muffe 3/4 auf der Eingangswelle (oben) ---- */
+const SYNC=[
+  {key:'m12',xh:HX.m12,name:'1./2. Gang',ay:-CD,rk:'out',sg:-1,left:{k:'g1',N:Zt.o1,nm:'1. Gang',gn:1},right:{k:'g2',N:Zt.o2,nm:'2. Gang',gn:2}},
+  {key:'m34',xh:HX.m34,name:'3./4. Gang',ay:0,rk:'in',sg:1,left:{k:'g3',N:Zt.i3,nm:'3. Gang',gn:3},right:{k:'g4',N:Zt.i4,nm:'4. Gang',gn:4}},
+  {key:'m5R',xh:HX.m5R,name:'5./R-Gang',ay:-CD,rk:'out',sg:-1,left:{k:'g5',N:Zt.o5,nm:'5. Gang',gn:5},right:{k:'gR',N:Zt.oR,nm:'Rückwärtsgang',gn:6}}
+];
+const SLOTC=[0,2*PI/3,-2*PI/3];
+
+SYNC.forEach(s=>{
+  const xh=s.xh,k=s.key,ay=s.ay,top=(ay===0),rk=s.rk,sg=s.sg,A={ay:ay};
+  const spl=trapPts(10,19.5,18.3,[[0,0],[0.07,1],[0.5,1],[0.57,0]]);
+  const sh=top?pInSh:pOutSh;
+  const sSh=addPart(Object.assign({name:'Keilwellenverzahnung '+(top?'Eingangswelle':'Ausgangswelle')+' (für Synchronkörper '+s.name+')',geo:polarSolid({outer:spl,inner:18,x0:xh-7.5,x1:xh+7.5}),color:top?COL.in:COL.out,rot:rk,tags:[top?'in':'out'],hatch:top?'H1':'H2'},A));
+  const pHub=addPart(Object.assign({name:'Synchronkörper '+s.name+' (Nabe mit 3 Nuten)',geo:polarSolid({outer:slotPts(dogPts,SLOTC,0.125,30.5,20.5),inner:20,x0:xh-7,x1:xh+7}),color:COL.hub,rot:rk,tags:['h'+k],hatch:'H1'},A));
+  const pHubSp=addPart(Object.assign({name:'Nabenverzahnung Synchronkörper '+s.name+' (Keilprofil, formschlüssig auf der Welle)',geo:polarSolid({outer:spl.map(q=>[q[0],20]),inner:spl.map(q=>[q[0],q[1]+0.1]),x0:xh-7,x1:xh+7}),color:COL.hub,rot:rk,tags:['h'+k],hatch:'H1'},A));
+  { const g=[pHub,pHubSp]; g.forEach(q=>q.grp=g); pHub.seams=pHubSp.seams=[['y',20,xh-7,xh+7,ay]]; }
+  sh.seams.push(['y',18,xh-7.5,xh+7.5,ay]); sSh.seams=[['y',18,xh-7.5,xh+7.5,ay]];
+  if(!sh.grp.includes(sSh)) sh.grp.push(sSh); sSh.grp=sh.grp;
+  SLOTC.forEach(a=>addPart(Object.assign({name:'Schaltstück '+s.name+' (Druckstück mit Rastnase)',geo:keyGeo(xh),color:COL.key,rot:rk,phase:a,keyOf:k,hatch:'H2'},A)));
+  SLOTC.forEach(a=>addPart(Object.assign({name:'Druckfeder '+s.name+' (unter dem Schaltstück)',geo:springGeo(xh),color:0xc0c4c9,rot:rk,phase:a,keyOf:k,spring:true,hatch:'H3'},A)));
+  addPart(Object.assign({name:'Schaltmuffe '+s.name+' (Mantel mit Gabelnut)',geo:revolve([[xh-11,43],[xh-8,46],[xh-3,46],[xh-3,41],[xh+3,41],[xh+3,46],[xh+8,46],[xh+11,43],[xh+11,38],[xh-11,38]]),
+    color:COL.sleeve,rot:rk,slide:k,tags:['m'+k],hatch:'H2'},A));
+  const inner=dogPts.map(p=>[p[0],p[1]+0.5]), outer=dogPts.map(p=>[p[0],38]);
+  [[xh-11,xh-4.5],[xh+4.5,xh+11]].forEach(r=>addPart(Object.assign({name:'Schaltmuffe '+s.name+' (Innenverzahnung, Rastnut in der Mitte)',
+    geo:polarSolid({outer:outer,inner:inner,x0:r[0],x1:r[1]}),color:COL.sleeve,rot:rk,slide:k,tags:['m'+k],hatch:'H2'},A)));
+  // Schaltgabel: oben liegende Muffe → Gabel nach oben, untere Muffen → Gabel nach unten
+  const FK={color:COL.fork,slide:k,group:'shift',hatch:'H1'};
+  const gA=forkArcGeo(xh), gM=forkArmGeo(xh); if(sg<0){ gA.rotateX(PI); gM.rotateX(PI); }
+  addPart(Object.assign({name:'Schaltgabel '+s.name+' (Gabelbügel, greift in die Muffennut)',geo:gA,ay:ay},FK));
+  addPart(Object.assign({name:'Gabelarm '+s.name,geo:gM,ay:ay},FK));
+  addPart(Object.assign({name:'Gabelnabe '+s.name+' (Klemmstück auf der Schaltstange)',geo:revolve([[xh-7,9.5],[xh+7,9.5],[xh+7,5],[xh-7,5]],40),ay:ay+sg*RY},FK));
+  const r0=xh-44, r1=xh+44, rp=[[r0,5]];
+  [-TRAVEL,0,TRAVEL].forEach(o=>{ const xn=xh+o; rp.push([xn-2.2,5],[xn-0.9,3.7],[xn+0.9,3.7],[xn+2.2,5]); });
+  rp.push([r1,5],[r1,0],[r0,0]);
+  addPart({name:'Schaltstange '+s.name+' (mit Rastkerben)',geo:revolve(rp,32),color:COL.rail,ay:ay+sg*RY,slide:k,group:'shift',hatch:'H2'});
+  [[xh-30,xh-20],[xh+20,xh+30]].forEach(q=>addPart({name:'Führungsbock Schaltstange '+s.name,geo:guideGeo(q[0],q[1],0,ay+sg*RY),color:COL.house,group:'shift',hatch:'H3'}));
+
+  // beide Seiten: Synchronring, Reibkonus, Klauenverzahnung, Losrad
+  [[s.left,-1],[s.right,1]].forEach(sd=>{
+    const side=sd[0],d=sd[1], rot=side.k, tg='k'+side.k.slice(1);
+    const ph=side.k==='gR'?thOR:(top?phM(side.N):phC(side.N));
+    ENGPH[side.gn]=ph;
+    const n=xh+d*7.5, f=xh+d*13.5;
+    const rb=d>0?[[n,30],[f,30],[f,27.8],[n,23.0]]:[[f,30],[n,30],[n,23.0],[f,27.8]];
+    const ringOpt={color:COL.ring,rot:rk,ay:ay,ring:{key:k,dir:d},tags:['sr_'+side.k],hatch:'H4'};
+    addPart(Object.assign({name:'Synchronring '+s.name+(d<0?' (links)':' (rechts)')+' – Innenkonus',geo:revolve(rb,64)},ringOpt));
+    const tx=d>0?[xh+10.5,xh+13.5]:[xh-13.5,xh-10.5];
+    addPart(Object.assign({name:'Synchronring '+s.name+(d<0?' (links)':' (rechts)')+' – Sperrverzahnung',geo:polarSolid({outer:dogPts,inner:30,x0:tx[0],x1:tx[1]})},ringOpt));
+    const cone=d>0?[[xh+8,23],[xh+14,27.8],[xh+14,26],[xh+8,21.5]]:[[xh-14,27.8],[xh-8,23],[xh-8,21.5],[xh-14,26]];
+    const pCone=addPart({name:'Schaltverzahnung '+side.nm+' – Reibkonus (fest mit dem Losrad verbunden)',geo:revolve(cone,64),color:COL.loose,rot:rot,phase:ph,ay:ay,tags:[tg],hatch:'H1'});
+    const dx=d>0?[xh+14,xh+21]:[xh-21,xh-14];
+    const pDog=addPart({name:'Schaltverzahnung '+side.nm+' – Verzahnung (fest mit dem Losrad verbunden)',geo:polarSolid({outer:dogPts,inner:26,x0:dx[0],x1:dx[1]}),color:COL.loose,rot:rot,phase:ph,ay:ay,tags:[tg],hatch:'H1'});
+    const xe=xh+d*25.5;
+    const sa=Math.min(xe,d>0?dx[1]:dx[0]), sb=Math.max(xe,d>0?dx[1]:dx[0]);
+    const pShell=addPart({name:'Schaltverzahnung '+side.nm+' – Verbindungsmantel zum Zahnrad',geo:revolve([[sa,30.5],[sb,30.5],[sb,26],[sa,26]],64),color:COL.loose,rot:rot,phase:ph,ay:ay,tags:[tg],hatch:'H1'});
+    const xc=xh+d*GOFF, zk=(top?'i':'o')+(side.k==='gR'?'R':side.k.slice(1));
+    const pGear=addPart({name:'Z'+ZN[zk]+' Losrad '+side.nm+' ('+side.N+' Zähne, '+(side.k==='gR'?'Evolvente, geradverzahnt)':'Evolvente, schrägverzahnt)'),geo:gearGeo(Object.assign(gSpec(side.N,xc,21,top?1:-1,side.k==='gR'?0:BETA),{ch:1.5})),
+      color:COL.loose,rot:rot,phase:ph,ay:ay,tags:[side.k],hatch:'H1'});
+    const xcone=xh+d*14, xring=xh+d*21, xgear=xh+d*25.5, grp=[pGear,pDog,pCone,pShell];
+    grp.forEach(q=>q.grp=grp);
+    pCone.seams=[[xcone,26,27.9,ay]]; pDog.seams=[[xcone,26,27.9,ay],[xring,26,30.55,ay]]; pShell.seams=[[xring,26,30.55,ay],[xgear,26,30.55,ay]]; pGear.seams=[[xgear,26,30.55,ay]];
+    const b0=d>0?xh+8:xh-41.5, b1=d>0?xh+41.5:xh-8;
+    needle(b0,b1,18,21,'Nadellager '+side.nm,{ay:ay});
+  });
+});
+
+// --- Festräder: i = auf der Eingangswelle (oben), o = auf der Ausgangswelle (unten)
+[['i1',GX.g1,'1. Gang'],['i2',GX.g2,'2. Gang'],['i5',GX.g5,'5. Gang'],['iR',GX.gR,'Rückwärtsgang'],['o3',GX.g3,'3. Gang'],['o4',GX.g4,'4. Gang']].forEach(c=>{
+  const k=c[0], top=k[0]==='i', Z=Zt[k], isR=k==='iR';
+  addPart({name:'Z'+ZN[k]+' Festrad '+c[2]+' ('+Z+' Zähne, '+(isR?'geradverzahnt)':'Evolvente, schrägverzahnt)'),geo:gearGeo(Object.assign(gSpec(Z,c[1],14,top?1:-1,isR?0:BETA),{ch:1.5,chi:1.5})),
+    color:top?COL.csg:COL.ofx,ay:top?0:-CD,rot:top?'in':'out',phase:isR?thTR:(top?phM(Z):phC(Z)),tags:[k],hatch:'H2'});
+});
+
+// --- Rücklaufrad
+addPart({name:'Rücklaufachse',geo:revolve([[GX.gR-14,8],[280,8],[280,0],[GX.gR-14,0]],32),color:COL.idl,ay:IY,az:IZ,hatch:'H2'});
+needle(GX.gR-8,GX.gR+8,8,10,'Nadellager Rücklaufrad',{ay:IY,az:IZ});
+addPart({name:'Z12 Rücklaufrad ('+Zt.idl+' Zähne, Zwischenrad, geradverzahnt)',geo:gearGeo(gSpec(Zt.idl,GX.gR,10,1,0)),color:COL.idl,ay:IY,az:IZ,rot:'idl',phase:thIdl,tags:['i'],hatch:'H3'});
+
+// --- Gehäuse mit Kugellagern
+[[-36,-24],[178,190],[279,291]].forEach((w,i)=>{
+  const nm=i===0?'(Antriebsseite)':i===1?'(Mittelwand)':'(Gegenseite)';
+  addPart({name:'Gehäusewand '+nm,geo:plateGeo(w[0],w[1]),color:COL.house,group:'house',hatch:'H4'});
+  ballBearing(w[0],w[1],14,26,0,'Kugellager Eingangswelle '+nm,'in');
+  ballBearing(w[0],w[1],14,26,-CD,'Kugellager Ausgangswelle '+nm,'out');
+});
+
+/* ================= Zustand & Kinematik ================= */
+const th={in:0,out:0,g1:0,g2:0,g3:0,g4:0,g5:0,gR:0,idl:0};
+let wOut=0, playing=true, flowOn=false, labOn=false, flowLabOn=false, hatchOn=false;
+const groupOn={core:true,house:false,shift:true};   // Gehäuse und Wellenlager sind ausgeblendet
+let gear=0;
+const KEYS=['m12','m34','m5R'], TOP=[1,3,5], BOT=[2,4,6], COLX=[40,110,180];
+const YT=42, YN=85, YB=128;
+/* Übersetzung: Zahnrad Eingangswelle (Zi) → Zahnrad Ausgangswelle (Zo) */
+const RATIO={1:Zt.o1/Zt.i1,2:Zt.o2/Zt.i2,3:Zt.o3/Zt.i3,4:Zt.o4/Zt.i4,5:Zt.o5/Zt.i5,6:Zt.oR/Zt.iR};
+const OUTK=g=>g===6?Zt.iR/Zt.oR:-Zt['i'+g]/Zt['o'+g];     // Drehzahlverhältnis Abtrieb/Antrieb mit Vorzeichen
+const GKEY={1:'g1',2:'g2',3:'g3',4:'g4',5:'g5',6:'gR'};
+/* alle nicht festgekeilten Räder laufen formschlüssig mit ihren Partnerrädern: Losräder 3/4 (auf der Eingangswelle) folgen der Ausgangswelle, alle anderen der Eingangswelle */
+function syncGears(){
+  th.g1=-th.in*Zt.i1/Zt.o1; th.g2=-th.in*Zt.i2/Zt.o2; th.g5=-th.in*Zt.i5/Zt.o5;
+  th.gR=th.in*Zt.iR/Zt.oR; th.idl=-th.in*Zt.iR/Zt.idl;
+  th.g3=-th.out*Zt.o3/Zt.i3; th.g4=-th.out*Zt.o4/Zt.i4;
+}
+
+/* ================= Kraftfluss: Linie durch die Bauteile ================= */
+const flow={mode:'all',idx:0,steps:[],pts:[],group:new T.Group(),mesh:null,head:null,hint:''};
+scene.add(flow.group);
+const flowMat=new T.MeshBasicMaterial({color:0xe01e37,depthTest:false,depthWrite:false,transparent:true,opacity:1});
+const V3=(x,y,z)=>new T.Vector3(x,y,z);
+const PL=(x,r,al)=>V3(x,r*Math.cos(al),r*Math.sin(al));
+
+function stepsFor(g){
+  const st=[];
+  if(!g) return st;
+  const add=(name,tags,verts)=>st.push({name:name,tags:tags,verts:verts});
+  const PLa=(x,r,al,ay)=>V3(x,ay+r*Math.cos(al),r*Math.sin(al));
+  const I={1:{k:'g1',n:'1. Gang',m:'m12',d:-1},2:{k:'g2',n:'2. Gang',m:'m12',d:1},3:{k:'g3',n:'3. Gang',m:'m34',d:-1},
+     4:{k:'g4',n:'4. Gang',m:'m34',d:1},5:{k:'g5',n:'5. Gang',m:'m5R',d:-1},6:{k:'gR',n:'Rückwärtsgang',m:'m5R',d:1}}[g];
+  const key=I.m, xh=HX[key], d=I.d, xc=GX[I.k];
+  const top=(key==='m34'), ay=top?0:-CD;
+  const xs=xh+d*4, xr=xh+d*11, xm=xh+d*12;
+  const KN={m12:'1./2.',m34:'3./4.',m5R:'5./R'}[key];
+  let al=top?PI:0;
+  const iz='Z'+ZN[(top?'i':'o')+(g===6?'R':g)], fz=top?'Z'+ZN['o'+g]:'Z'+ZN['i'+(g===6?'R':g)];
+  if(top){
+    // Eingangswelle → Synchronkörper → Schaltmuffe → Schaltverzahnung → Losrad → Festrad der Ausgangswelle
+    add('Eingangswelle',['in'],[V3(-110,0,0),V3(xs,0,0)]);
+    add('Synchronkörper '+KN,['h'+key],[V3(xs,0,0)]);
+    add('Schaltmuffe '+KN,['m'+key],[PLa(xs,42,al,0),PLa(xm,36,al,0)]);
+    add('Schaltverzahnung '+I.n,['k'+I.k.slice(1)],[PLa(xr,26,al,0)]);
+    add(iz+' Losrad '+I.n,[I.k],[PLa(xc,30,al,0)]);
+    add(fz+' Festrad '+I.n,['o'+g],[V3(xc,-MOD*Zt['i'+g]/2,0)]);
+    add('Ausgangswelle',['out'],[V3(xc,-CD,0),V3(-110,-CD,0)]);
+  }else{
+    add('Eingangswelle',['in'],[V3(-110,0,0),V3(xc,0,0)]);
+    if(g===6){
+      const Pt=V3(xc,rpT*Math.cos(phiTI),rpT*Math.sin(phiTI));
+      const Pib=V3(xc,IY+rpi*Math.cos(phiIB),IZ+rpi*Math.sin(phiIB));
+      al=Math.atan2(Pib.z,Pib.y+CD);
+      add('Z11 Festrad Rückwärtsgang',['iR'],[Pt]);
+      add('Z12 Rücklaufrad (kehrt die Drehrichtung um)',['i'],[V3(xc,IY,IZ),Pib]);
+      add('Z13 Losrad Rückwärtsgang',['gR'],[PLa(xc,30,al,ay)]);
+      add('Schaltverzahnung Rückwärtsgang',['kR'],[PLa(xr,26,al,ay)]);
+    }else{
+      add(fz+' Festrad '+I.n,['i'+g],[V3(xc,-MOD*Zt['i'+g]/2,0)]);
+      add(iz+' Losrad '+I.n,[I.k],[PLa(xc,30,al,ay)]);
+      add('Schaltverzahnung '+I.n,['k'+I.k.slice(1)],[PLa(xr,26,al,ay)]);
+    }
+    add('Schaltmuffe '+KN,['m'+key],[PLa(xm,36,al,ay),PLa(xs,42,al,ay)]);
+    add('Synchronkörper '+KN,['h'+key],[V3(xs,ay,0)]);
+    add('Ausgangswelle',['out'],[V3(-110,-CD,0)]);
+  }
+  add('Abtriebsflansch',['fl'],[V3(-111,-CD,0)]);
+  return st;
+}
+function flowLast(){ return flow.mode==='all'?flow.steps.length-1:Math.min(flow.idx,flow.steps.length-1); }
+function clearFlowMesh(){
+  while(flow.group.children.length){
+    const c=flow.group.children.pop();
+    if(c.geometry) c.geometry.dispose();
+  }
+  flow.mesh=null;
+}
+function drawFlow(){
+  clearFlowMesh();
+  if(!flowOn||!flow.steps.length){ updateFlowUi(); return; }
+  const last=flowLast();
+  const end=flow.steps[last].end;
+  const cp=new T.CurvePath();
+  let len=0;
+  for(let i=1;i<end;i++){
+    const a=flow.pts[i-1],b=flow.pts[i],l=a.distanceTo(b);
+    if(l<1e-4) continue;
+    cp.add(new T.LineCurve3(a,b)); len+=l;
+  }
+  if(len>0){
+    const geo=new T.TubeGeometry(cp,Math.max(16,Math.round(len/2.5)),2.5,10,false);
+    const m=new T.Mesh(geo,flowMat); m.renderOrder=999; m.frustumCulled=false; flow.group.add(m);
+    // Pfeilspitze am Ende
+    let a=null,b=flow.pts[end-1];
+    for(let i=end-2;i>=0;i--){ if(flow.pts[i].distanceTo(b)>1e-3){ a=flow.pts[i]; break; } }
+    if(a){
+      const dir=b.clone().sub(a).normalize();
+      const cone=new T.Mesh(new T.ConeGeometry(6.6,15,16),flowMat);
+      cone.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),dir);
+      cone.position.copy(b).addScaledVector(dir,3);
+      cone.renderOrder=1000; cone.frustumCulled=false; flow.group.add(cone);
+    }
+  }
+  updateFlowUi();
+}
+function rebuildFlow(){
+  flow.steps=stepsFor(gear);
+  const pts=[];
+  flow.steps.forEach(s=>{
+    s.verts.forEach(v=>pts.push(v));
+    s.end=pts.length;
+    const n=pts.length; s.anchor=n>=2?pts[n-1].clone().add(pts[n-2]).multiplyScalar(0.5):pts[n-1].clone();
+  });
+  flow.pts=pts;
+  if(flow.idx>=flow.steps.length) flow.idx=Math.max(0,flow.steps.length-1);
+  drawFlow(); applyColors();
+}
+function updateFlowUi(){
+  const el=$('fTxt');
+  $('flow').style.display=flowOn?'block':'none'; $('flowBtns').style.display=flowOn?'flex':'none';
+  $('fAll').classList.toggle('on',flow.mode==='all');
+  if(!flowOn) return;
+  if(!flow.steps.length){ el.textContent='Kein Gang eingelegt – bitte im Schaltschema einen Gang wählen.'; return; }
+  const n=flow.steps.length;
+  if(flow.mode==='all') el.innerHTML='Gesamter Kraftfluss im <b>'+gearName()+'</b>: '+n+' Bauteile von der Eingangswelle bis zum Abtriebsflansch.'+FLOWLEG;
+  else el.innerHTML='Schritt <b>'+(flow.idx+1)+' von '+n+'</b>: '+flow.steps[flow.idx].name+FLOWLEG;
+}
+const FLOWLEG='<br><span style="color:#ffb400">■</span> durchlaufene Bauteile &nbsp; <span style="color:var(--flow)">━</span> Kraftfluss';
+function gearName(){ return gear===6?'Rückwärtsgang':gear+'. Gang'; }
+
+function applyColors(){
+  const shown=new Set(), cur=new Set();
+  if(flowOn&&flow.steps.length){
+    const last=flowLast();
+    flow.steps.forEach((s,i)=>{
+      if(i<=last) s.tags.forEach(t=>shown.add(t));
+      if(flow.mode==='step'&&i===last) s.tags.forEach(t=>cur.add(t));
+    });
+    if(flow.mode==='all') flow.steps.forEach(s=>s.tags.forEach(t=>cur.add(t)));
+  }
+  parts.forEach(p=>{
+    const c=p.color.clone();
+    if(flowOn){
+      if(p.tags.some(t=>shown.has(t))) c.set(FLOWCOL);
+      else c.lerp(GRAY,0.86);
+    }
+    p.mat.color.copy(c);
+    if(p.capMat){
+      p.capMat.color.copy(c).lerp(WHITE,hatchOn?0.5:0.08);
+      const want=hatchOn?HATCH[p.hatch].tex:null;
+      if(p.capMat.map!==want){ p.capMat.map=want; p.capMat.needsUpdate=true; }
+    }
+  });
+}
+let cutH=105;   // Schnittgrenze (Welt-y): oberhalb geschnitten, darunter ungeschnitten
+const CLIPS=[clipPlane,wipePlane];
+function updatePartCut(p){
+  const on=sectionOn&&p.crossZ&&!p.unc; p.stencil.visible=on; if(p.capZ) p.capZ.visible=on;
+  const cl=(p.unc&&sectionOn)?[]:CLIPS;
+  if(p.mat.clippingPlanes.length!==cl.length){ p.mat.clippingPlanes=cl; p.mat.needsUpdate=true; p.emat.clippingPlanes=cl; p.emat.needsUpdate=true; }
+}
+function setUncut(p,v){ if(!p||p.unc===v) return; p.unc=v; updatePartCut(p); }
+function applyCut(){ clipPlane.constant=sectionOn?0:1e5; wipePlane.constant=cutH; parts.forEach(updatePartCut); }
+function setSection(on){ sectionOn=on; applyCut(); }
+function applyGroups(){ parts.forEach(p=>{ p.holder.visible=groupOn[p.group]; }); }
+
+/* ================= Schalthebel (Schaltschema) ================= */
+const gsvg=$('gsvg'), ballEl=$('ball');
+const ball={x:COLX[1],y:YN,path:[],drag:false};
+function placeBall(){ ballEl.setAttribute('cx',ball.x); ballEl.setAttribute('cy',ball.y); }
+function goGear(g){
+  ball.path=[];
+  if(g===0){
+    if(Math.abs(ball.y-YN)>0.5) ball.path.push({x:ball.x,y:YN});
+    return;
+  }
+  const c=(g-1)>>1, ty=(g%2===1)?YT:YB, tx=COLX[c];
+  if(Math.abs(ball.y-YN)>0.5) ball.path.push({x:ball.x,y:YN});
+  if(Math.abs(ball.x-tx)>0.5) ball.path.push({x:tx,y:YN});
+  ball.path.push({x:tx,y:ty});
+}
+function updateBall(dt){
+  if(ball.drag||!ball.path.length) return;
+  const t=ball.path[0], dx=t.x-ball.x, dy=t.y-ball.y, d=Math.hypot(dx,dy), st=340*dt;
+  if(d<=st){ ball.x=t.x; ball.y=t.y; ball.path.shift(); }
+  else{ ball.x+=dx/d*st; ball.y+=dy/d*st; }
+}
+function svgPt(e){
+  const pt=gsvg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  return pt.matrixTransform(gsvg.getScreenCTM().inverse());
+}
+function dragTo(px,py){
+  px=clamp(px,COLX[0],COLX[2]); py=clamp(py,YT,YB);
+  const inLane=COLX.some(cx=>Math.abs(ball.x-cx)<0.5);
+  const atN=Math.abs(ball.y-YN)<0.5;
+  if(inLane&&!atN){
+    ball.y=py; if(Math.abs(py-YN)<4) ball.y=YN;
+  }else if(inLane&&atN){
+    if(Math.abs(py-YN)>6&&Math.abs(py-YN)>Math.abs(px-ball.x)) ball.y=py;
+    else{ ball.x=px; for(const cx of COLX) if(Math.abs(ball.x-cx)<4) ball.x=cx; }
+  }else{
+    ball.y=YN; ball.x=px;
+    for(const cx of COLX) if(Math.abs(ball.x-cx)<4) ball.x=cx;
+  }
+}
+ballEl.addEventListener('pointerdown',e=>{
+  e.preventDefault(); ballEl.setPointerCapture(e.pointerId); ball.drag=true; ball.path=[];
+});
+ballEl.addEventListener('pointermove',e=>{
+  if(!ball.drag) return;
+  const p=svgPt(e); dragTo(p.x,p.y);
+});
+function endDrag(){
+  if(!ball.drag) return;
+  ball.drag=false;
+  const lane=COLX.find(cx=>Math.abs(ball.x-cx)<0.5);
+  if(lane===undefined){
+    let best=COLX[0]; COLX.forEach(cx=>{ if(Math.abs(cx-ball.x)<Math.abs(best-ball.x)) best=cx; });
+    ball.path=[{x:best,y:YN}];
+  }else if(Math.abs(ball.y-YN)>0.5){
+    const ty=Math.abs(ball.y-YN)<24?YN:(ball.y<YN?YT:YB);
+    ball.path=[{x:lane,y:ty}];
+  }
+}
+ballEl.addEventListener('pointerup',endDrag);
+ballEl.addEventListener('pointercancel',endDrag);
+gsvg.querySelectorAll('.gn').forEach(t=>{ t.addEventListener('click',()=>goGear(+t.dataset.g)); t.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); goGear(+t.dataset.g); } }); });
+window.addEventListener('keydown',e=>{
+  if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox') return;
+  const k=e.key.toLowerCase();
+  if(k>='1'&&k<='5') goGear(+k); else if(k==='r') goGear(6); else if(k==='0'||k==='n') goGear(0);
+});
+
+/* ================= Kamera ================= */
+const view={yaw:0.28,pitch:0.17,dist:600,target:new T.Vector3(85,-50,0)};
+function applyCam(){
+  const cp=Math.cos(view.pitch),sp=Math.sin(view.pitch);
+  cam.position.set(view.target.x+view.dist*cp*Math.sin(view.yaw),view.target.y+view.dist*sp,view.target.z+view.dist*cp*Math.cos(view.yaw));
+  cam.lookAt(view.target);
+  updateOrtho();
+}
+function updateOrtho(){
+  const asp=Math.max(0.1,stage.clientWidth/Math.max(1,stage.clientHeight));
+  const hh=view.dist*Math.tan(FOV*PI/360);
+  cam.left=-hh*asp; cam.right=hh*asp; cam.top=hh; cam.bottom=-hh;
+  cam.updateProjectionMatrix();
+}
+function fitDist(){
+  const asp=Math.max(0.3,stage.clientWidth/Math.max(1,stage.clientHeight));
+  const th2=Math.tan(FOV*PI/360);
+  return Math.max(172/th2,228/(th2*asp))*1.06;
+}
+function setView(name){
+  view.target.set(85,-50,0);
+  if(name==='front'){ view.yaw=0; view.pitch=0; }
+  else if(name==='iso'){ view.yaw=-PI/4; view.pitch=0.6155; }
+  else if(name==='top'){ view.yaw=0; view.pitch=1.45; }
+  view.dist=fitDist(); applyCam();
+}
+const ptrs=new Map(); let lastPinch=0;
+const pinchDist=()=>{ const a=[...ptrs.values()]; return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)||1; };
+function pan(dx,dy){
+  const k=view.dist*0.0014;
+  view.target.x-=Math.cos(view.yaw)*dx*k; view.target.z+=Math.sin(view.yaw)*dx*k;
+  view.target.y+=dy*k;
+}
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointerdown',e=>{
+  if(labSticky.length){ labSticky=[]; refreshLabHl(); }
+  cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); hideTip();
+  if(ptrs.size===2) lastPinch=pinchDist();
+});
+cv.addEventListener('pointermove',e=>{
+  const p=ptrs.get(e.pointerId);
+  if(!p){ hover(e); return; }
+  const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
+  if(ptrs.size===1){
+    if((e.buttons&2)||e.shiftKey||e.ctrlKey) pan(dx,dy);
+    else{ view.yaw-=dx*0.006; view.pitch=clamp(view.pitch+dy*0.006,-1.5,1.5); }
+  }else if(ptrs.size===2){
+    const d=pinchDist(); view.dist=clamp(view.dist*lastPinch/d,120,2200); lastPinch=d; pan(dx/2,dy/2);
+  }
+  applyCam();
+});
+const upPtr=e=>{ ptrs.delete(e.pointerId); };
+cv.addEventListener('pointerup',upPtr); cv.addEventListener('pointercancel',upPtr);
+cv.addEventListener('pointerleave',()=>hideTip());
+cv.addEventListener('wheel',e=>{
+  e.preventDefault(); view.dist=clamp(view.dist*Math.exp(e.deltaY*0.0012),120,2200); applyCam();
+},{passive:false});
+
+/* ================= Hover-Info ================= */
+const ray=new T.Raycaster(), mouse=new T.Vector2(), tip=$('tip');
+let hovered=null, lastHover=0;
+function applyHov(p,on){ (p.grp||[p]).forEach(q=>{ q.mat.emissive.setHex(on?0x2c2c2c:0); setUncut(q,on); }); }
+function isHov(pt){ return !!hovered&&(pt===hovered||(!!hovered.grp&&hovered.grp===pt.grp)); }
+function hideTip(){ tip.style.display='none'; if(hovered){ applyHov(hovered,false); hovered=null; } }
+function hover(e){
+  const now=performance.now(); if(now-lastHover<60) return; lastHover=now;
+  const r=cv.getBoundingClientRect();
+  mouse.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(mouse,cam);
+  const list=parts.filter(p=>p.holder.visible).map(p=>p.mesh);
+  const hits=ray.intersectObjects(list,false);
+  let hit=null;
+  for(const h of hits){ if(sectionOn&&!isHov(h.object.userData.part)&&(h.point.z>0.05&&h.point.y>cutH)) continue; hit=h; break; }
+  const p=hit?hit.object.userData.part:null;
+  if(p!==hovered){
+    const same=hovered&&p&&hovered.grp&&hovered.grp===p.grp;
+    if(!same){ if(hovered) applyHov(hovered,false); if(p) applyHov(p,true); }
+    hovered=p;
+  }
+  if(p){ tip.textContent=p.name; tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+16)+'px'; }
+  else tip.style.display='none';
+}
+
+/* ================= Beschriftung: automatisches Layout ohne Überschneidungen ================= */
+/* Alle Beschriftungen stehen in zwei Spalten links/rechts vom Modell. Die Anker werden nach x
+   geteilt (links/rechts) und nach y sortiert; kreuzende Verbindungslinien werden durch Tauschen
+   der Plätze aufgelöst. So überschneiden sich weder Texte noch Linien. */
+const labSvg=$('lab');
+const LAB=[
+  ['Eingangswelle',[-85,14,0],'core'],
+  ['Antriebsflansch',[-111,31.5,0],'core'],
+  ['Ausgangswelle',[-85,-CD+14,0],'core'],
+  ['Abtriebsflansch',[-111,-CD-37.5,0],'core'],
+  ['Schaltmuffe 3./4.',[HX.m34,46,0],'core'],
+  ['Schaltmuffe 1./2.',[HX.m12,-CD-46,0],'core'],
+  ['Schaltmuffe 5./R',[HX.m5R,-CD-46,0],'core'],
+  ['Z5 Losrad 3. Gang',[GX.g3,MOD*Zt.i3/2+0.5,0],'core'],
+  ['Z7 Losrad 4. Gang',[GX.g4,MOD*Zt.i4/2+0.5,0],'core'],
+  ['Z2 Losrad 1. Gang',[GX.g1,-CD-MOD*Zt.o1/2-0.5,0],'core'],
+  ['Z4 Losrad 2. Gang',[GX.g2,-CD-MOD*Zt.o2/2-0.5,0],'core'],
+  ['Z10 Losrad 5. Gang',[GX.g5,-CD-MOD*Zt.o5/2-0.5,0],'core'],
+  ['Z13 Losrad Rückwärtsgang',[GX.gR,-CD-MOD*Zt.oR/2-0.5,0],'core'],
+  ['Z12 Rücklaufrad',[GX.gR,IY+4,IZ],'core'],
+  ['Festräder',[GX.g2,MOD*Zt.i2/2+0.5,0],'core'],
+  ['Synchronring (Innenkonus)',[HX.m34+10,27,0],'core'],
+  ['Synchronkörper',[HX.m34,-25,0],'core'],
+  ['Schaltgabel',[HX.m34,60,0],'shift'],
+  ['Schaltstange',[HX.m34+30,RY,0],'shift'],
+  ['Nadellager',[GX.g3,19.5,0],'core'],
+  ['Kugellager (Wellenlager)',[-30,20.7,0],'house']
+];
+function mkLab(tc,lc,dc){
+  const g=document.createElementNS(NS,'g');
+  const ln=document.createElementNS(NS,'line'); ln.setAttribute('class',lc);
+  const c=document.createElementNS(NS,'circle'); c.setAttribute('class',dc); c.setAttribute('r','3');
+  const t=document.createElementNS(NS,'text'); t.setAttribute('class',tc);
+  const r=document.createElementNS(NS,'rect'); r.setAttribute('rx','5'); r.setAttribute('class',tc==='lt'?'lbg':'lbgf');
+  g.appendChild(ln); g.appendChild(r); g.appendChild(c); g.appendChild(t); labSvg.appendChild(g);
+  g.style.display='none';
+  const o={g:g,ln:ln,r:r,c:c,t:t,txt:'',cls:tc,anc:''};
+  [r,t].forEach(e=>{
+    e.style.pointerEvents='all'; e.style.cursor='pointer';
+    e.addEventListener('pointerenter',()=>{ labHover=labParts(o); refreshLabHl(); });
+    e.addEventListener('pointerleave',()=>{ labHover=[]; refreshLabHl(); });
+    e.addEventListener('click',ev=>{ ev.stopPropagation(); const ps=labParts(o); labSticky=(labSticky.length&&ps.length===labSticky.length&&ps.every(q=>labSticky.includes(q)))?[]:ps; refreshLabHl(); });
+  });
+  return o;
+}
+/* Beschriftung ↔ Bauteil: Überfahren hebt das Bauteil hervor, Klicken hält die Hervorhebung fest */
+let labHover=[], labSticky=[], labLit=new Set();
+function labParts(o){
+  let list=[];
+  if(o.step!==undefined&&flow.steps[o.step]){ const tg=flow.steps[o.step].tags; list=parts.filter(q=>q.tags.some(t=>tg.includes(t))); }
+  else{
+    const MAP={'Rastnut der Muffe':'Schaltmuffe','Synchronring (Innenkonus)':'Synchronring','Sperrverzahnung':'Synchronring'};
+    const key=MAP[o.text]||o.text.replace(/\s*\(.*?\)/g,'');
+    if(o.text==='Festräder') list=parts.filter(q=>/Festrad/.test(q.name));
+    else{
+      list=parts.filter(q=>q.name.startsWith(key));
+      const near=list.filter(q=>{ const b=q.mesh.geometry.boundingBox; return o.v&&o.v.x>=b.min.x-2&&o.v.x<=b.max.x+2; });
+      if(near.length) list=near;
+    }
+  }
+  const all=new Set(); list.forEach(q=>(q.grp||[q]).forEach(m=>all.add(m)));
+  return [...all];
+}
+function refreshLabHl(){
+  const want=new Set([...labHover,...labSticky]);
+  labLit.forEach(q=>{ if(!want.has(q)){ q.mat.emissive.setHex(0); setUncut(q,false); } });
+  want.forEach(q=>{ q.mat.emissive.setHex(0x555555); setUncut(q,true); });
+  labLit=want;
+}
+const labG=LAB.map(l=>{ const o=mkLab('lt','ll','ld'); o.v=new T.Vector3(l[1][0],l[1][1],l[1][2]); o.group=l[2]; o.text=l[0]; return o; });
+const flabs=[];
+function ensureFlowLabels(n){ while(flabs.length<n) flabs.push(mkLab('lf','llf','ldf')); }
+const mctx=document.createElement('canvas').getContext('2d'), wCache={};
+function textW(txt,bold){
+  const k=(bold?'b':'n')+txt;
+  if(wCache[k]===undefined){ mctx.font=(bold?'700 ':'500 ')+'13px system-ui, sans-serif'; wCache[k]=mctx.measureText(txt).width; }
+  return wCache[k];
+}
+function segX(ax,ay,bx,by,cx,cy,dx,dy){
+  const o=(px,py,qx,qy,rx,ry)=>(qx-px)*(ry-py)-(qy-py)*(rx-px);
+  const d1=o(ax,ay,bx,by,cx,cy),d2=o(ax,ay,bx,by,dx,dy),d3=o(cx,cy,dx,dy,ax,ay),d4=o(cx,cy,dx,dy,bx,by);
+  return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));
+}
+function assignSlots(list,xEnd,ys){
+  list.sort((a,b)=>a.ay-b.ay);
+  list.forEach((it,i)=>{ it.sy=ys[i]; });
+  for(let n=0;n<80;n++){
+    let sw=false;
+    for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++){
+      const A=list[i],B=list[j];
+      if(segX(A.ax,A.ay,xEnd,A.sy,B.ax,B.ay,xEnd,B.sy)){ const t=A.sy; A.sy=B.sy; B.sy=t; sw=true; }
+    }
+    if(!sw) break;
+  }
+}
+let labZoom=1;
+const _v=new T.Vector3();
+function placeLab(it,xEnd,left){
+  const o=it.o;
+  o.g.style.display='';
+  if(o.txt!==it.text){ o.t.textContent=it.text; o.txt=it.text; }
+  if(o.cls!==it.cls){ o.t.setAttribute('class',it.cls); o.cls=it.cls; }
+  o.ln.setAttribute('x1',it.ax); o.ln.setAttribute('y1',it.ay); o.ln.setAttribute('x2',xEnd); o.ln.setAttribute('y2',it.sy);
+  o.c.setAttribute('cx',it.ax); o.c.setAttribute('cy',it.ay);
+  const bw=it.w+16;
+  o.r.setAttribute('rx',5); o.r.setAttribute('x',left?xEnd-bw:xEnd); o.r.setAttribute('y',it.sy-11); o.r.setAttribute('width',bw); o.r.setAttribute('height',22);
+  o.t.setAttribute('x',left?xEnd-8:xEnd+8); o.t.setAttribute('y',it.sy+4.5);
+  o.t.setAttribute('text-anchor',left?'end':'start');
+}
+
+/* ===== Smartphone: Beschriftung als nummerierte Marker + Liste ===== */
+const labBox=document.createElement('div'); labBox.id='labList'; stage.appendChild(labBox);
+let labKey='';
+labBox.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-i]'); if(!b) return;
+  const it=labNarrowItems[+b.dataset.i]; if(!it) return;
+  const ps=labParts(it.o); labSticky=(labSticky.length&&ps.length===labSticky.length&&ps.every(q=>labSticky.includes(q)))?[]:ps; refreshLabHl();
+});
+let labNarrowItems=[];
+function layoutNarrow(items,W,H){
+  if(Math.abs(cam.zoom-1)>1e-4){ cam.zoom=1; cam.updateProjectionMatrix(); }
+  labZoom=1;
+  if(!window.MODEL_BOX){ const bx=new T.Box3(); parts.forEach(p=>{ if(p.mesh) bx.expandByObject(p.mesh); }); window.MODEL_BOX=bx; }
+  const mb=window.MODEL_BOX; let cy=0;
+  for(let i=0;i<8;i++){ _v.set(i&1?mb.max.x:mb.min.x,i&2?mb.max.y:mb.min.y,i&4?mb.max.z:mb.min.z).project(cam); cy+=(-_v.y*0.5+0.5)*H/8; }
+  const gen=items.filter(i=>i.cls==='lt').sort((a,b)=>a.ax-b.ax);
+  gen.forEach((it,i)=>{ it.num=i+1; });
+  items.forEach(it=>{ if(it.cls!=='lt') it.num=parseInt(it.text)||0; it.px=it.ax; it.py=it.ay+(it.ay<cy?-17:17); });
+  const D=22;
+  for(let n=0;n<50;n++){
+    for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
+      const A=items[i],B=items[j]; let dx=B.px-A.px, dy=B.py-A.py, d=Math.hypot(dx,dy);
+      if(d<D){ if(d<0.01){ dx=0.01; dy=(i%2?1:-1); d=1; } const k=(D-d)/2/d; A.px-=dx*k; A.py-=dy*k; B.px+=dx*k; B.py+=dy*k; }
+    }
+    items.forEach(it=>{ it.px=clamp(it.px,14,W-14); it.py=clamp(it.py,14,H-14); });
+  }
+  items.forEach(it=>{
+    const o=it.o; o.g.style.display='';
+    const s=String(it.num);
+    if(o.txt!==s){ o.t.textContent=s; o.txt=s; }
+    if(o.cls!==it.cls){ o.t.setAttribute('class',it.cls); o.cls=it.cls; }
+    o.ln.setAttribute('x1',it.ax); o.ln.setAttribute('y1',it.ay); o.ln.setAttribute('x2',it.px); o.ln.setAttribute('y2',it.py);
+    o.c.setAttribute('cx',it.ax); o.c.setAttribute('cy',it.ay);
+    o.r.setAttribute('x',it.px-11); o.r.setAttribute('y',it.py-11); o.r.setAttribute('width',22); o.r.setAttribute('height',22); o.r.setAttribute('rx',11);
+    o.t.setAttribute('x',it.px); o.t.setAttribute('y',it.py+4.5); o.t.setAttribute('text-anchor','middle');
+  });
+  labNarrowItems=gen;
+  const key=gen.map(g=>g.text).join('|');
+  if(key!==labKey){
+    labKey=key;
+    labBox.innerHTML=gen.map((g,i)=>'<button type="button" data-i="'+i+'"><b>'+g.num+'</b> '+g.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</button>').join('');
+  }
+  const has=gen.length>0;
+  labBox.style.display=has?'block':'none'; stage.classList.toggle('labnarrow',has);
+}
+function layoutLabels(){
+  const W=stage.clientWidth,H=stage.clientHeight;
+  const items=[], used=new Set();
+  const proj=(v)=>{ _v.copy(v).project(cam); return [(_v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H]; };
+  labG.forEach(L=>{
+    if(labOn&&groupOn[L.group]){ const p=proj(L.v); items.push({o:L,ax:p[0],ay:p[1],text:L.text,cls:'lt'}); used.add(L); }
+  });
+  if(flowOn&&flowLabOn&&flow.steps.length){
+    const last=flowLast();
+    ensureFlowLabels(flow.steps.length);
+    for(let i=0;i<=last;i++){
+      const s=flow.steps[i], p=proj(s.anchor);
+      const cur=(flow.mode==='all'||i===flow.idx);
+      flabs[i].step=i;
+      items.push({o:flabs[i],ax:p[0],ay:p[1],text:(i+1)+' '+s.name.replace(/\s*\(.*?\)/g,''),cls:cur?'lf':'lf old'});
+      used.add(flabs[i]);
+    }
+  }
+  labG.concat(flabs).forEach(L=>{ if(!used.has(L)) L.g.style.display='none'; });
+  const narrowMode=W<560&&items.length>0;
+  if(!narrowMode&&labBox.style.display==='block'){ labBox.style.display='none'; stage.classList.remove('labnarrow'); labKey=''; }
+  if(narrowMode){ layoutNarrow(items,W,H); return; }
+  const n=items.length;
+  // Modell verkleinern, damit rechts und links Platz für die Spalten bleibt
+  let maxW=0; items.forEach(it=>{ it.w=textW(it.text,it.cls!=='lt'); if(it.w>maxW) maxW=it.w; });
+  const colW=clamp(maxW+26,110,250);
+  const rsv=sectionOn?56:0;
+  // Modellausdehnung auf dem Bildschirm (Beschriftungsspalten liegen direkt am Modell)
+  if(!window.MODEL_BOX){ const bx=new T.Box3(); parts.forEach(p=>{ if(p.mesh) bx.expandByObject(p.mesh); }); window.MODEL_BOX=bx; }
+  const mb=window.MODEL_BOX; let sxMin=1e9,sxMax=-1e9;
+  for(let i=0;i<8;i++){ _v.set(i&1?mb.max.x:mb.min.x,i&2?mb.max.y:mb.min.y,i&4?mb.max.z:mb.min.z).project(cam); const sx=(_v.x*0.5+0.5)*W; if(sx<sxMin)sxMin=sx; if(sx>sxMax)sxMax=sx; }
+  const GAP=10, zc=cam.zoom||1;
+  const hl=(W/2-sxMin)/zc, hr=(sxMax-W/2)/zc;      // Halbbreiten bei Zoom 1
+  const wantFit=Math.min((W/2-colW-GAP-(sectionOn?0:0))/Math.max(hl,1),(W/2-colW-GAP-rsv)/Math.max(hr,1));
+  const want=n?clamp(wantFit,0.4,1):(sectionOn?clamp((W-2*64)/W,0.6,1):1);
+  labZoom+=(want-labZoom)*0.2;
+  if(Math.abs(labZoom-want)<0.002) labZoom=want;
+  if(Math.abs(cam.zoom-labZoom)>1e-4){ cam.zoom=labZoom; cam.updateProjectionMatrix(); }
+  if(!n) return;
+  items.sort((a,b)=>a.ax-b.ax);
+  // Kraftfluss-Beschriftung steht nur auf einer Seite (rechts); allgemeine Bauteilnamen dann links
+  const fl=items.filter(i=>i.cls!=='lt'), gen=items.filter(i=>i.cls==='lt');
+  let left,right;
+  if(fl.length){ right=fl; left=gen; } else { const half=Math.ceil(n/2); left=items.slice(0,half); right=items.slice(half); }
+  const el=id=>$(id), vis=e=>e.offsetParent!==null;
+  const gB=Math.max(50,el('gate').offsetTop+el('gate').offsetHeight+10), iB=Math.max(50,el('info').offsetTop+el('info').offsetHeight+10);
+  const fT=vis(el('flow'))?el('flow').offsetTop-10:H-10;
+  const rng=(top,bot,m)=>{ bot=Math.max(bot,top+120); const sp=clamp((bot-top)/Math.max(m,1),24,32); const y0=top+((bot-top)-sp*(m-1))/2; return Array.from({length:m},(_,i)=>y0+i*sp); };
+  const xL=n?Math.max(colW,sxMin-GAP):colW, xR=n?Math.min(W-colW-rsv,sxMax+GAP):W-colW-rsv;
+  assignSlots(left,xL,rng(gB,fT,left.length));
+  assignSlots(right,xR,rng(iB,H-10,right.length));
+  left.forEach(it=>placeLab(it,xL,true));
+  right.forEach(it=>placeLab(it,xR,false));
+}
+
+/* ================= UI ================= */
+const cutSl=$('cutSl'), cutTrack=$('cutTrack'), cutHandle=$('cutHandle');
+let cutDrag=false;
+const CUT_MIN=-215, CUT_MAX=105;              // Schnittgrenze (Welt-y); ganz oben = kein Schnitt
+function setCutH(h){ cutH=clamp(h,CUT_MIN,CUT_MAX); sectionOn=cutH<CUT_MAX-2; applyCut(); }
+function cutScreenY(h){ _v.set(85,h,0).project(cam); return (-_v.y*0.5+0.5)*stage.clientHeight; }
+function dragCut(e){
+  const r=stage.getBoundingClientRect(), py=e.clientY-r.top;
+  const y0=cutScreenY(0), k=(cutScreenY(100)-y0)/100;      // Pixel pro Welt-mm (negativ: y nach oben)
+  if(Math.abs(k)>1e-3) setCutH((py-y0)/k);
+}
+cutHandle.addEventListener('pointerdown',e=>{ e.preventDefault(); cutHandle.setPointerCapture(e.pointerId); cutDrag=true; });
+cutHandle.addEventListener('pointermove',e=>{ if(cutDrag) dragCut(e); });
+const cutEnd=()=>{ cutDrag=false; };
+cutHandle.addEventListener('pointerup',cutEnd); cutHandle.addEventListener('pointercancel',cutEnd);
+cutTrack.addEventListener('pointerdown',e=>{ if(e.target===cutTrack) dragCut(e); });
+cutHandle.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'||e.key==='ArrowLeft'){ setCutH(cutH+6); e.preventDefault(); }
+  if(e.key==='ArrowDown'||e.key==='ArrowRight'){ setCutH(cutH-6); e.preventDefault(); }
+});
+const cutLine=document.createElementNS(NS,'line'); cutLine.setAttribute('class','cutline'); cutLine.style.display='none'; labSvg.appendChild(cutLine);
+function updateCutLine(){
+  const W=stage.clientWidth,H=stage.clientHeight;
+  const y=cutScreenY(cutH);
+  cutHandle.style.top=clamp(y,15,H-15)+'px';      // Griff sitzt immer auf Höhe der Schnittlinie
+  if(!sectionOn){ cutLine.style.display='none'; return; }
+  cutLine.setAttribute('x1',0); cutLine.setAttribute('x2',W); cutLine.setAttribute('y1',y); cutLine.setAttribute('y2',y);
+  cutLine.style.display='';
+}
+$('swFlow').addEventListener('change',e=>{ flowOn=e.target.checked; flow.mode='all'; drawFlow(); applyColors(); });
+$('swLab').addEventListener('change',e=>{ labOn=e.target.checked; });
+$('fLab').addEventListener('click',e=>{ flowLabOn=!flowLabOn; e.currentTarget.classList.toggle('on',flowLabOn); e.currentTarget.setAttribute('aria-pressed',String(flowLabOn)); });
+$('swShift').addEventListener('change',e=>{ groupOn.shift=e.target.checked; applyGroups(); });
+$('btnPlay').addEventListener('click',e=>{
+  playing=!playing; e.target.textContent=playing?'Pause':'Drehen'; e.target.setAttribute('aria-pressed',String(playing));
+});
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+$('fNext').addEventListener('click',()=>{
+  if(!flow.steps.length) return;
+  if(flow.mode==='all'){ flow.mode='step'; flow.idx=0; }
+  else flow.idx=Math.min(flow.idx+1,flow.steps.length-1);
+  drawFlow(); applyColors();
+});
+$('fPrev').addEventListener('click',()=>{
+  if(!flow.steps.length) return;
+  if(flow.mode==='all'){ flow.mode='step'; flow.idx=flow.steps.length-1; }
+  else flow.idx=Math.max(flow.idx-1,0);
+  drawFlow(); applyColors();
+});
+$('fAll').addEventListener('click',()=>{ flow.mode='all'; drawFlow(); applyColors(); });
+const RPM_MAX=3000, RPM_STEP=100; let rpm=1000;
+const rng={get value(){ return rpm/30; }};
+function setRpm(v){ rpm=clamp(Math.round(v/RPM_STEP)*RPM_STEP,0,RPM_MAX); $('spVal').textContent=fmt(rpm,0)+' min⁻¹'; $('spDn').disabled=rpm<=0; $('spUp').disabled=rpm>=RPM_MAX; }
+[['spDn',-1],['spUp',1]].forEach(function(d){ const b=$(d[0]); let tm=null,iv=null; const stop=()=>{ clearTimeout(tm); clearInterval(iv); };
+  b.addEventListener('pointerdown',e=>{ e.preventDefault(); setRpm(rpm+d[1]*RPM_STEP); stop(); tm=setTimeout(()=>{ iv=setInterval(()=>setRpm(rpm+d[1]*RPM_STEP),90); },450); });
+  ['pointerup','pointerleave','pointercancel','blur'].forEach(ev=>b.addEventListener(ev,stop));
+  b.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setRpm(rpm+d[1]*RPM_STEP); } }); });
+setRpm(rpm);
+const iG=$('iG'),iI=$('iI'),iIn=$('iIn'),iOut=$('iOut');
+const nums=[...gsvg.querySelectorAll('.gn')];
+
+/* ================= Hauptschleife ================= */
+const clock=new T.Clock();
+let lastOutTxt='';
+
+/* ================= Konturlinien der Schnittflächen ================= */
+const keepY=new T.Plane(new T.Vector3(0,1,0),50);
+const outlineMat=new T.LineBasicMaterial({color:0x0b0f17,clippingPlanes:[keepY]});
+const _a=new T.Vector3(),_b=new T.Vector3(),_c=new T.Vector3();
+/* Winkel-Buckets: bei drehenden Teilen müssen nur die Dreiecke nahe der Schnittebene geprüft werden */
+const NBK=720;
+function buildBuckets(p){
+  const g=p.mesh.geometry, pos=g.attributes.position, idx=g.index, nt=(idx?idx.count:pos.count)/3;
+  const bins=Array.from({length:NBK},()=>[]), always=[], B=[0,0,0], TAU2=2*PI;
+  for(let t=0;t<nt;t++){
+    let ok=true;
+    for(let k=0;k<3;k++){
+      const i=idx?idx.getX(3*t+k):3*t+k, y=pos.getY(i), z=pos.getZ(i);
+      if(Math.hypot(y,z)<1e-4){ ok=false; break; }
+      B[k]=Math.atan2(z,y);
+    }
+    if(!ok){ always.push(t); continue; }
+    let lo=0,hi=0;
+    for(let k=1;k<3;k++){ let d=B[k]-B[0]; while(d>PI) d-=TAU2; while(d<-PI) d+=TAU2; lo=Math.min(lo,d); hi=Math.max(hi,d); }
+    if(hi-lo>0.3){ always.push(t); continue; }
+    const a0=Math.floor((B[0]+lo+PI+TAU2*4)%TAU2/TAU2*NBK), a1=Math.floor((B[0]+hi+PI+TAU2*4)%TAU2/TAU2*NBK);
+    let m=(a1-a0+NBK)%NBK; if(m>NBK/2){ always.push(t); continue; }
+    for(let q=0;q<=m;q++) bins[(a0+q)%NBK].push(t);
+  }
+  p.bk={bins:bins,always:always};
+}
+function candTris(p,theta){
+  if(!p.bk) buildBuckets(p);
+  const out=p.bk.always.slice(), TAU2=2*PI;
+  [-theta,PI-theta].forEach(a=>{ const b=Math.floor((((a+PI)%TAU2)+TAU2)%TAU2/TAU2*NBK)%NBK; p.bk.bins[b].forEach(t=>out.push(t)); });
+  return out;
+}
+let _Wbuf=new Float32Array(0), _Dbuf=new Uint8Array(0);
+function cutSegments(mesh,seams,tris){
+  const g=mesh.geometry, pos=g.attributes.position, idx=g.index, M=mesh.matrixWorld.elements;
+  const n=pos.count;
+  if(tris&&_Wbuf.length<n*3){ _Wbuf=new Float32Array(n*3); _Dbuf=new Uint8Array(n); }
+  const W=tris?_Wbuf:new Float32Array(n*3), done=tris?_Dbuf:null, touched=[];
+  const wv=i=>{ if(done&&done[i]) return; if(done){ done[i]=1; touched.push(i); } _a.fromBufferAttribute(pos,i).applyMatrix4(mesh.matrixWorld); W[3*i]=_a.x; W[3*i+1]=_a.y; W[3*i+2]=_a.z; };
+  if(!tris) for(let i=0;i<n;i++) wv(i);
+  const out=[], nt=tris?tris.length:(idx?idx.count:n)/3, V=[0,0,0], pt=[];
+  for(let tt=0;tt<nt;tt++){
+    const t=tris?tris[tt]:tt;
+    V[0]=idx?idx.getX(3*t):3*t; V[1]=idx?idx.getX(3*t+1):3*t+1; V[2]=idx?idx.getX(3*t+2):3*t+2;
+    if(tris){ wv(V[0]); wv(V[1]); wv(V[2]); }
+    const z0=W[3*V[0]+2],z1=W[3*V[1]+2],z2=W[3*V[2]+2];
+    const s0=z0>=0,s1=z1>=0,s2=z2>=0;
+    if(s0===s1&&s1===s2) continue;
+    pt.length=0;
+    for(let e=0;e<3;e++){
+      const i=V[e],j=V[(e+1)%3], zi=W[3*i+2], zj=W[3*j+2];
+      if((zi>=0)!==(zj>=0)){ const u=zi/(zi-zj); pt.push(W[3*i]+u*(W[3*j]-W[3*i]), W[3*i+1]+u*(W[3*j+1]-W[3*i+1])); }
+    }
+    if(pt.length!==4) continue;
+    let segs=[[pt[0],pt[1],pt[2],pt[3]]], skip=false;
+    if(seams) for(const sm of seams){
+      if(sm[0]==='y'){   // waagerechte Nahtlinie (Mantelfläche): überdeckten x-Bereich aus der Linie herausschneiden
+        const nx=[];
+        for(const sg of segs){
+          if(Math.abs(Math.abs(sg[1])-sm[1])<1e-3&&Math.abs(Math.abs(sg[3])-sm[1])<1e-3){
+            const lo=Math.min(sg[0],sg[2]), hi=Math.max(sg[0],sg[2]), c0=Math.max(lo,sm[2]), c1=Math.min(hi,sm[3]);
+            if(c1>c0+1e-6){ if(c0>lo+1e-6) nx.push([lo,sg[1],c0,sg[1]]); if(c1<hi-1e-6) nx.push([c1,sg[1],hi,sg[1]]); continue; }
+          }
+          nx.push(sg);
+        }
+        segs=nx; continue;
+      }
+      if(Math.abs(pt[0]-sm[0])<1e-3&&Math.abs(pt[2]-sm[0])<1e-3){ const cyr=sm[3]||0, a=Math.abs(pt[1]-cyr),b=Math.abs(pt[3]-cyr); if(a>=sm[1]&&a<=sm[2]&&b>=sm[1]&&b<=sm[2]){ skip=true; break; } }
+    }
+    if(skip) continue;
+    for(const sg of segs) out.push(sg[0],sg[1],0.1,sg[2],sg[3],0.1);
+  }
+  if(done) touched.forEach(i=>{ done[i]=0; });
+  return new Float32Array(out);
+}
+function updateCutOutlines(){
+  keepY.constant=-cutH;
+  parts.forEach(p=>{
+    if(!p.crossZ) return;
+    const show=sectionOn&&!p.unc&&p.holder.visible;
+    if(!show){ if(p.ol) p.ol.visible=false; return; }
+    p.mesh.updateWorldMatrix(true,false);
+    const el=p.mesh.matrixWorld.elements;
+    if(!p.ol){ p.ol=new T.LineSegments(new T.BufferGeometry(),outlineMat); p.ol.frustumCulled=false; p.ol.renderOrder=5; scene.add(p.ol); p.olKey=null; }
+    p.ol.visible=true;
+    let same=!!p.olKey; if(same) for(let i=0;i<16;i++) if(Math.abs(p.olKey[i]-el[i])>1e-6){ same=false; break; }
+    if(!same){
+      p.olKey=Float32Array.from(el);
+      p.ol.geometry.dispose();
+      p.ol.geometry=new T.BufferGeometry();
+      p.ol.geometry.setAttribute('position',new T.BufferAttribute(cutSegments(p.mesh,p.seams,(p.rot&&!p.az)?candTris(p,p.rotor.rotation.x):null),3));
+    }
+  });
+}
+function frame(){
+  requestAnimationFrame(frame);
+  const dt=Math.min(clock.getDelta(),0.05);
+  updateBall(dt); placeBall();
+
+  // Schaltmuffen folgen dem Schalthebel
+  const offs={m12:0,m34:0,m5R:0};
+  let col=-1, s=0;
+  for(let c=0;c<3;c++){
+    if(Math.abs(ball.x-COLX[c])<1.5){ col=c; s=clamp((YN-ball.y)/(YN-YT),-1,1)*TRAVEL; offs[KEYS[c]]=-s; }
+  }
+  const as=Math.abs(s);
+  let g=0, f=0, gs=0;
+  if(col>=0&&as>0.8){
+    gs=s>0?TOP[col]:BOT[col];
+    f=sstep((as-0.8)/(TRAVEL-0.6-0.8));
+    if(as>=TRAVEL-0.6) g=gs;
+  }
+  if(g!==gear){ gear=g; rebuildFlow(); }
+
+  // Borg-Warner: Schaltstück schiebt Ring an den Konus, dann gibt die Rastnase nach
+  const st={};
+  KEYS.forEach(k=>{
+    const sv=offs[k], a=Math.abs(sv), sg=sv>=0?1:-1;
+    const kraw=Math.min(a,0.8), rel=a-kraw, relax=1-sstep((a-5)/3);
+    st[k]={sg:sg,key:kraw*relax*sg,ring:clamp(kraw*relax-0.3,0,0.5),dep:5*sstep((rel-2)/1.5)};
+  });
+
+  const wIn=(+rng.value)/100*6;
+  const target=f>0?OUTK(gs)*wIn*f:0;
+  wOut+=(target-wOut)*(1-Math.exp(-dt*7));
+  if(playing){
+    th.in+=wIn*dt; th.out+=wOut*dt;
+    if(f>0){   // Klauenverzahnung beim Einrücken ausrichten
+      const onIn=(gs===3||gs===4);
+      let dd=(th[GKEY[gs]]+ENGPH[gs]-(onIn?th.in:th.out));
+      dd-=Math.round(dd/PITCH)*PITCH;
+      th.out+=(onIn?dd*Zt['i'+gs]/Zt['o'+gs]:dd)*(1-Math.exp(-dt*10*f));
+    }
+    syncGears();
+  }
+
+  parts.forEach(p=>{
+    if(p.rot) p.rotor.rotation.x=(th[p.rot]||0)+p.phase;
+    if(p.slide) p.holder.position.x=offs[p.slide];
+    else if(p.keyOf){ const q=st[p.keyOf]; p.holder.position.x=q.key;
+      if(p.spring){ const sc=(5-q.dep)/5; p.body.scale.y=sc; p.body.position.y=20.5*(1-sc); } else p.body.position.y=-q.dep; }
+    else if(p.ring){ const q=st[p.ring.key]; p.holder.position.x=(q.sg===p.ring.dir)?q.ring*p.ring.dir:0; }
+  });
+
+  // Anzeige
+  const nIn=(+rng.value)*30;
+  const nOut=wIn>0?nIn*wOut/wIn:0;
+  const txt=gear+'|'+Math.round(nIn)+'|'+Math.round(nOut);
+  if(txt!==lastOutTxt){
+    lastOutTxt=txt;
+    iG.textContent=gear===0?'N':(gear===6?'R':String(gear));
+    iI.textContent=gear===0?'–':fmt(RATIO[gear],2);
+    iIn.textContent=fmt(Math.round(nIn),0);
+    iOut.textContent=fmt(Math.round(nOut),0);
+    nums.forEach(n=>n.classList.toggle('on',+n.dataset.g===gear));
+  }
+
+  layoutLabels();
+  updateCutLine();
+  updateCutOutlines();
+  renderer.render(scene,cam);
+}
+
+function resize(){
+  const W=stage.clientWidth,H=stage.clientHeight;
+  renderer.setSize(W,H,false);
+  updateOrtho();
+  labSvg.setAttribute('viewBox','0 0 '+W+' '+H);
+}
+new ResizeObserver(resize).observe(stage);
+
+/* Touch-Erkennung + Skalierung nach realem Verhältnis Layout-Breite zu Bildschirmbreite */
+(function(){
+  const de=document.documentElement;
+  function upd(){
+    let touch=false; try{touch=(navigator.maxTouchPoints>0)||matchMedia('(pointer:coarse)').matches;}catch(e){}
+    if(!touch){de.classList.remove('touch');return;}
+    const sw=Math.min(screen.width||390,screen.height||390), iw=window.innerWidth||sw;
+    const k=Math.max(1,Math.min(3,Math.max(iw,window.innerHeight>iw?iw:Math.min(iw,Math.max(sw,iw*0+1)))/ (sw>0?Math.max(sw,1):1)));
+    de.style.setProperty('--k',(iw>sw*1.6&&iw>800?Math.min(1.3,iw/Math.max(sw,360)/1.6):1).toFixed(2));
+    de.classList.add('touch');
+  }
+  upd(); addEventListener('resize',upd);
+})();
+/* Touch: Menü einklappen, größere Trefferflächen im Schaltschema */
+(function(){
+  const bar=document.getElementById('bar'), mb=document.getElementById('btnMenu');
+  if(mb) mb.addEventListener('click',function(){ const o=bar.classList.toggle('open'); mb.setAttribute('aria-expanded',o?'true':'false'); mb.textContent=o?'✕ Schließen':'☰ Steuerung'; });
+  document.querySelectorAll('#gsvg .gn').forEach(function(g){
+    const r=g.querySelector('rect'); if(!r||g.querySelector('rect.hit')) return;
+    const h=r.cloneNode(false); h.setAttribute('class','hit'); const p=9;
+    h.setAttribute('x',+r.getAttribute('x')-p); h.setAttribute('y',+r.getAttribute('y')-p); h.setAttribute('width',+r.getAttribute('width')+2*p); h.setAttribute('height',+r.getAttribute('height')+2*p);
+    g.insertBefore(h,g.firstChild);
+  });
+})();
+
+resize();
+setView('front');
+applyColors(); applyGroups(); placeBall(); updateFlowUi();
+$('btnBack').addEventListener('click',function(){ if(window.__wr) location.reload(); else if(window.__emb&&parent!==window){ try{ parent.postMessage('gb-back','*'); }catch(x){} } else location.href='index.html'; });
+if(window.__PREVIEW){ document.documentElement.classList.add('pv'); setView('iso'); view.dist*=1.38; view.target.set(85,-50,0); applyCam(); }
+frame();
+if(window.__PREVIEW||window.__emb) requestAnimationFrame(function(){ requestAnimationFrame(function(){ try{ parent.postMessage('gb-ready','*'); }catch(x){} }); });
+})();
+</script>
+</body>
+</html>
