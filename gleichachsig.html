@@ -1584,7 +1584,7 @@ function frame(){
   const w=omegas(wIn);
   const target=f>0?w[GKEY[gs]]*f:0;
   wOut+=(target-wOut)*(1-Math.exp(-dt*7));
-  if(playing){
+  if(playing&&!sectionOn){   // im Schnitt steht alles still
     for(const k in th){ th[k]+=(k==='out'?wOut:w[k])*dt; }
     BBS.forEach(b=>{ const ws=b.shaft==='out'?wOut:w[b.shaft]; th[b.key]=(th[b.key]||0)+ws*b.ratio*dt; });
     if(f>0){   // Klauenverzahnung beim Einrücken ausrichten

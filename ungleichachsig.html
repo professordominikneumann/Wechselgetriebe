@@ -1514,7 +1514,7 @@ function frame(){
   const wIn=(+rng.value)/100*6;
   const target=f>0?OUTK(gs)*wIn*f:0;
   wOut+=(target-wOut)*(1-Math.exp(-dt*7));
-  if(playing){
+  if(playing&&!sectionOn){   // im Schnitt steht alles still
     th.in+=wIn*dt; th.out+=wOut*dt;
     if(f>0){   // Klauenverzahnung beim Einrücken ausrichten
       const onIn=(gs===3||gs===4);
