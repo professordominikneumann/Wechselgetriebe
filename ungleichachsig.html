@@ -197,6 +197,22 @@ html.touch #cutTrack{left:calc(20px*var(--k))}
 html.touch #cutHandle{width:calc(44px*var(--k));left:calc(-20px*var(--k));height:calc(40px*var(--k));margin-top:calc(-20px*var(--k));line-height:calc(40px*var(--k));font-size:calc(18px*var(--k))}
 html.touch.flowon #info{display:none!important}
 @media (max-height:480px) and (orientation:landscape){ html.touch #gate{width:150px} }
+/* ===== Touch v4: halbe Größe, Kraftfluss-Menü ===== */
+html.touch .btn,html.touch .back{min-height:calc(18px*var(--k));padding:calc(2px*var(--k)) calc(6px*var(--k));font-size:calc(10px*var(--k));border-radius:calc(5px*var(--k))}
+html.touch .stp{min-width:calc(22px*var(--k))}
+html.touch .spv{min-height:calc(18px*var(--k));min-width:calc(42px*var(--k));padding:calc(2px*var(--k));font-size:calc(10px*var(--k))}
+html.touch .sw{min-height:calc(18px*var(--k));gap:calc(5px*var(--k));font-size:calc(10px*var(--k))}
+html.touch .sw .t{width:calc(24px*var(--k));height:calc(13px*var(--k));border-radius:calc(7px*var(--k))}
+html.touch .sw .t::after{width:calc(15px*var(--k));height:calc(15px*var(--k));top:calc(-1px*var(--k));left:calc(-1px*var(--k))}
+html.touch .sw input:checked + .t::after{left:calc(10px*var(--k))}
+html.touch #bar{gap:calc(3px*var(--k)) calc(6px*var(--k));padding:calc(3px*var(--k)) calc(6px*var(--k));font-size:calc(10px*var(--k))}
+html.touch #gate{width:min(calc(120px*var(--k)),40vw)}
+html.touch #cutSl{width:calc(30px*var(--k))}
+html.touch #cutTrack{left:calc(13px*var(--k))}
+html.touch #cutHandle{width:calc(30px*var(--k));left:calc(-13px*var(--k));height:calc(28px*var(--k));margin-top:calc(-14px*var(--k));line-height:calc(28px*var(--k));font-size:calc(13px*var(--k))}
+html.touch.flowon #bar>:not(#btnBack):not(.fcol){display:none!important}
+html.touch.flowon #bar .fcol>.sw{display:flex!important}
+@media (max-height:480px) and (orientation:landscape){ html.touch #gate{width:110px} }
 </style>
 </head>
 <body>
@@ -772,6 +788,16 @@ addPart({name:'Z12 Rücklaufrad ('+Zt.idl+' Zähne, Zwischenrad, geradverzahnt)'
 
 /* ================= Zustand & Kinematik ================= */
 const th={in:0,out:0,g1:0,g2:0,g3:0,g4:0,g5:0,gR:0,idl:0};
+
+/* Drehmarken auf Ein- und Ausgangswelle (laufen mit, bleiben im Kraftfluss sichtbar) */
+function addMark(x0,x1,r,key,ay){
+  [[0,0xffffff,5],[Math.PI/2,0x14161b,4]].forEach(function(q){
+    const geo=new T.BoxGeometry(x1-x0,2.2,q[2]).translate((x0+x1)/2,r+0.7,0);
+    const p=addPart({name:'Drehmarke ('+(key==='in'?'Eingangswelle':'Ausgangswelle')+')',geo:geo,color:q[1],rot:key,phase:q[0],ay:ay||0,tags:[],hatch:'H1'});
+    p.mk=true;
+  });
+}
+addMark(-96,-66,14,'in',0); addMark(-96,-66,14,'out',-CD);
 let wOut=0, playing=true, flowOn=false, labOn=false, flowLabOn=false, hatchOn=false;
 const groupOn={core:true,house:false,shift:true};   // Gehäuse und Wellenlager sind ausgeblendet
 let gear=0;
@@ -912,7 +938,7 @@ function applyColors(){
   }
   parts.forEach(p=>{
     const c=p.color.clone();
-    if(flowOn){
+    if(flowOn&&!p.mk){
       if(p.tags.some(t=>shown.has(t))) c.set(FLOWCOL);
       else c.lerp(GRAY,0.86);
     }
