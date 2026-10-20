@@ -225,8 +225,9 @@ html.touch.flowon #bar .fcol>.sw{display:flex!important}
       <div id="flowBtns" class="fb">
         <button class="btn" id="fPrev" type="button">◀ Zurück</button>
         <button class="btn" id="fNext" type="button">Weiter ▶</button>
-        <button class="btn on" id="fAll" type="button">Ganze Linie</button>
+        <button class="btn on" id="fAll" type="button">Gesamter Kraftfluss</button>
         <button class="btn" id="fLab" type="button" aria-pressed="false">Beschriftung</button>
+        <button class="btn" id="fSide" type="button">Seitenansicht</button>
       </div></div>
     <label class="sw"><input type="checkbox" id="swLab"><span class="t"></span>Beschriftung</label>
     <label class="sw"><input type="checkbox" id="swShift" checked><span class="t"></span>Schaltgabeln</label>
@@ -712,12 +713,12 @@ const pInFl=addPart({name:'Antriebsflansch (Eingang, runde Scheibe mit Schrauben
 const pZ1=addPart({name:'Z1 Antriebsrad ('+Zt.in+' Zähne, Evolvente, schrägverzahnt)',geo:gearGeo(Object.assign(gSpec(Zt.in,GX.in,16,1,BETA),{ch:1.5,chi:1.5})),color:COL.in,rot:'in',phase:phM(Zt.in),tags:['gin'],hatch:'H1'});
 needle(35,49,12,14.5,'Pilotlager (Nadellager)');
 // --- Ausgangswelle
-const pOutSh=addPart({name:'Ausgangswelle (Hauptwelle)',geo:revolve([[33,18],[312.05,18],[313.221,18.115],[314.346,18.457],[315.383,19.011],[316.293,19.757],[317.039,20.667],[317.593,21.704],[317.935,22.829],[318.05,24],[318.05,16],[334,16],[336,14],[336,0],[54,0],[54,14.5],[33,14.5]]),color:COL.out,rot:'out',tags:['out'],hatch:'H2'});
-const pOutFl=addPart({name:'Abtriebsflansch (runde Scheibe mit Schraubenlöchern)',geo:flangeGeo(318,332,40,16,6,31,3.6),color:COL.out,rot:'out',tags:['fl'],hatch:'H2'});
+const pOutSh=addPart({name:'Ausgangswelle (Hauptwelle) – Abtriebsflansch fest mit der Welle verbunden',geo:revolve([[33,18],[312.05,18],[313.221,18.115],[314.346,18.457],[315.383,19.011],[316.293,19.757],[317.039,20.667],[317.593,21.704],[317.935,22.829],[318.05,24],[318.05,16],[334,16],[336,14],[336,0],[54,0],[54,14.5],[33,14.5]]),color:COL.out,rot:'out',tags:['out'],hatch:'H2'});
+const pOutFl=addPart({name:'Ausgangswelle (Hauptwelle) – Abtriebsflansch fest mit der Welle verbunden',geo:flangeGeo(318,332,40,16,6,31,3.6),color:COL.out,rot:'out',tags:['fl'],hatch:'H2'});
 
 // Flansche sind fest mit den Wellen verbunden: ein gemeinsames Bauteil (getrennte Bezeichnungen bleiben)
 { const g1=[pInSh,pInFl]; g1.forEach(q=>q.grp=g1); pInSh.seams=pInFl.seams=[['y',12,-118,-104]];
-  const g2=[pOutSh,pOutFl]; g2.forEach(q=>q.grp=g2); pOutSh.seams=pOutFl.seams=[['y',16,318,332]]; }
+  const g2=[pOutSh,pOutFl]; g2.forEach(q=>q.grp=g2); pOutSh.seams=[]; pOutFl.seams=[]; }
 
 /* ---- Borg-Warner-Synchronisierung (Sperrsynchronisierung mit Schaltstücken) ---- */
 const SYNC=[
@@ -859,15 +860,17 @@ addPart({name:'Z12 Rücklaufrad ('+Zt.idl+' Zähne, Zwischenrad, geradverzahnt)'
 /* ================= Zustand & Kinematik ================= */
 const th={in:0,cs:0,out:0,g1:0,g2:0,g3:0,g5:0,gR:0,idl:0};
 
-/* Drehmarken auf Ein- und Ausgangswelle (laufen mit, bleiben im Kraftfluss sichtbar) */
-function addMark(x0,x1,r,key,ay){
-  [[0,0xffffff,5],[Math.PI/2,0x14161b,4]].forEach(function(q){
-    const geo=new T.BoxGeometry(x1-x0,2.2,q[2]).translate((x0+x1)/2,r+0.7,0);
-    const p=addPart({name:'Drehmarke ('+(key==='in'?'Eingangswelle':'Ausgangswelle')+')',geo:geo,color:q[1],rot:key,phase:q[0],ay:ay||0,tags:[],hatch:'H1'});
-    p.mk=true;
+/* Drehmarken (Rillen) am Flansch von Ein- und Ausgangswelle */
+function addMark(x0,x1,R,key,ay){
+  [[0,[0,2.6]],[Math.PI,[-3.2,1.8,3.2,1.8]]].forEach(function(q){
+    const offs=q[1]; for(let i=0;i<offs.length;i+=2){
+      const geo=new T.BoxGeometry(x1-x0,2.2,offs[i+1]).translate((x0+x1)/2,R-1.0,offs[i]===0&&offs.length===2?0:offs[i]);
+      const p=addPart({name:'Drehmarke (Rille am '+(key==='in'?'Antriebsflansch':'Abtriebsflansch')+')',geo:geo,color:0x0d0f13,rot:key,phase:q[0],ay:ay||0,tags:[],hatch:'H1'});
+      p.mk=true;
+    }
   });
 }
-addMark(-96,-62,16,'in',0); addMark(292,312,18,'out',0);
+addMark(-118,-104,34,'in',0); addMark(318,332,40,'out',0);
 let wOut=0, playing=true, flowOn=false, labOn=false, flowLabOn=false, hatchOn=false;
 const groupOn={core:true,house:false,shift:true};   // Gehäuse und Wellenlager sind ausgeblendet
 let gear=0;
@@ -929,8 +932,7 @@ function stepsFor(g){
   }
   add('Schaltmuffe '+KN,['m'+key],[PL(xm,36,al),PL(xs,42,al)]);
   add('Synchronkörper '+KN,['h'+key],[V3(xs,0,0)]);
-  add('Ausgangswelle',['out'],[V3(318,0,0)]);
-  add('Abtriebsflansch',['fl'],[V3(332,0,0)]);
+  add('Ausgangswelle',['out','fl'],[V3(318,0,0),V3(332,0,0)]);
   return st;
 }
 function flowLast(){ return flow.mode==='all'?flow.steps.length-1:Math.min(flow.idx,flow.steps.length-1); }
@@ -988,7 +990,7 @@ function updateFlowUi(){
   if(!flowOn) return;
   if(!flow.steps.length){ el.textContent='Kein Gang eingelegt – bitte im Schaltschema einen Gang wählen.'; return; }
   const n=flow.steps.length;
-  if(flow.mode==='all') el.innerHTML='Gesamter Kraftfluss im <b>'+gearName()+'</b>: '+n+' Bauteile von der Eingangswelle bis zum Abtriebsflansch.'+FLOWLEG+((innerWidth<=900||document.documentElement.classList.contains('touch'))?'<div style="margin-top:4px;line-height:1.35">'+flow.steps.map((s,i)=>'<b>'+(i+1)+'</b> '+s.name.replace(/\s*\(.*?\)/g,'')).join(' &nbsp;·&nbsp; ')+'</div>':'');
+  if(flow.mode==='all') el.innerHTML='Gesamter Kraftfluss im <b>'+gearName()+'</b>: '+n+' Bauteile von der Eingangswelle bis zum Abtrieb.'+FLOWLEG+((innerWidth<=900||document.documentElement.classList.contains('touch'))?'<div style="margin-top:4px;line-height:1.35">'+flow.steps.map((s,i)=>'<b>'+(i+1)+'</b> '+s.name.replace(/\s*\(.*?\)/g,'')).join(' &nbsp;·&nbsp; ')+'</div>':'');
   else el.innerHTML='Schritt <b>'+(flow.idx+1)+' von '+n+'</b>: '+flow.steps[flow.idx].name+FLOWLEG;
 }
 const FLOWLEG='<br><span style="color:#ffb400">■</span> durchlaufene Bauteile &nbsp; <span style="color:var(--flow)">━</span> Kraftfluss';
@@ -1028,7 +1030,7 @@ function updatePartCut(p){
 function setUncut(p,v){ if(!p||p.unc===v) return; p.unc=v; updatePartCut(p); }
 function applyCut(){ clipPlane.constant=sectionOn?0:1e5; wipePlane.constant=cutH; parts.forEach(updatePartCut); }
 function setSection(on){ sectionOn=on; applyCut(); }
-function applyGroups(){ parts.forEach(p=>{ p.holder.visible=groupOn[p.group]; }); }
+function applyGroups(){ parts.forEach(p=>{ p.holder.visible=groupOn[p.group]&&!(flowOn&&p.group==='shift'); }); }
 
 /* ================= Schalthebel (Schaltschema) ================= */
 const gsvg=$('gsvg'), ballEl=$('ball');
@@ -1340,7 +1342,7 @@ function layoutLabels(){
   const items=[], used=new Set();
   const proj=(v)=>{ _v.copy(v).project(cam); return [(_v.x*0.5+0.5)*W,(-_v.y*0.5+0.5)*H]; };
   labG.forEach(L=>{
-    if(labOn&&groupOn[L.group]&&!(flowOn&&W<560)){ const p=proj(L.v); items.push({o:L,ax:p[0],ay:p[1],text:L.text,cls:'lt'}); used.add(L); }
+    if(labOn&&groupOn[L.group]&&!(flowOn&&(W<560||L.group==='shift'))){ const p=proj(L.v); items.push({o:L,ax:p[0],ay:p[1],text:L.text,cls:'lt'}); used.add(L); }
   });
   if(flowOn&&(flowLabOn||(labOn&&W<560))&&flow.steps.length){
     const last=flowLast();
@@ -1419,7 +1421,8 @@ function updateCutLine(){
   cutLine.setAttribute('x1',0); cutLine.setAttribute('x2',W); cutLine.setAttribute('y1',y); cutLine.setAttribute('y2',y);
   cutLine.style.display='';
 }
-$('swFlow').addEventListener('change',e=>{ flowOn=e.target.checked; flow.mode='all'; drawFlow(); applyColors(); });
+$('swFlow').addEventListener('change',e=>{ flowOn=e.target.checked; flow.mode='all'; drawFlow(); applyColors(); applyGroups(); });
+$('fSide').addEventListener('click',()=>setView('front'));
 $('swLab').addEventListener('change',e=>{ labOn=e.target.checked; });
 $('fLab').addEventListener('click',e=>{ flowLabOn=!flowLabOn; e.currentTarget.classList.toggle('on',flowLabOn); e.currentTarget.setAttribute('aria-pressed',String(flowLabOn)); });
 $('swShift').addEventListener('change',e=>{ groupOn.shift=e.target.checked; applyGroups(); });
