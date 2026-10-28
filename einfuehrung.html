@@ -504,15 +504,17 @@ var PH=[
  ['Leerlauf','Die Schaltmuffe steht in der Mitte. Das Losrad wird vom Festrad angetrieben, dreht aber frei auf dem Nadellager. Losrad und Welle drehen unterschiedlich schnell.'],
  ['Vorsynchronisieren','Die Schaltgabel schiebt die Schaltmuffe zum Losrad. Die Rastnase nimmt die Schaltstücke mit. Sie drücken den Synchronring mit seinem Innenkonus auf den Reibkonus des Losrads.'],
  ['Sperren und Angleichen','Die Reibung dreht den Synchronring ein kleines Stück mit. Seine Sperrverzahnung steht jetzt vor den Zähnen der Schaltmuffe und sperrt sie. Solange gesperrt ist, bremst oder beschleunigt der Reibkonus das Losrad, bis es genauso schnell dreht wie die Welle.'],
- ['Durchschalten','Bei Gleichlauf hält der Konus den Ring nicht mehr fest. Die Muffe dreht den Synchronring über die Dachschrägen zurück, die Schaltstücke tauchen gegen ihre Federn ab, und die Muffe gleitet durch die Sperrverzahnung.'],
- ['Gang eingelegt','Die Innenverzahnung der Schaltmuffe greift in die Schaltverzahnung des Losrads. Losrad, Schaltmuffe, Synchronkörper und Welle sind formschlüssig verbunden. Die Kraft fließt vom Festrad über das Losrad auf die Welle.']
+ ['Durchschalten','Bei Gleichlauf hält der Konus den Ring nicht mehr fest. Die Muffe dreht den Synchronring über die Dachschrägen zurück, die Schaltstücke tauchen gegen ihre Federn ab, und die Muffe gleitet durch die Sperrverzahnung des Rings.'],
+ ['Über die Schaltverzahnung schieben','Jetzt schiebt sich die Schaltmuffe über die Schaltverzahnung des Losrads. Ihre Innenzähne gleiten in die Zahnlücken der Schaltverzahnung. Das geht ohne Kratzen, weil Losrad und Muffe jetzt gleich schnell drehen. Im Schnittbild ist der Bereich gelb markiert, in dem die Muffe die Schaltverzahnung schon überdeckt.'],
+ ['Gang eingelegt','Die Schaltmuffe überdeckt die Schaltverzahnung vollständig. Losrad, Schaltmuffe, Synchronkörper und Welle sind formschlüssig verbunden. Die Kraft fließt vom Festrad über das Losrad auf die Welle.']
 ];
+var SV={x:595,y:250,w:90,h:90,band:[246,288],r0:557};   // Schaltverzahnung und rechte Muffenkante im Schnittbild (px)
 var SEQ=(function(){
   var s=[],i;function add(f,ms,ph){s.push({f:f,ms:ms,ph:ph});}
   add(0,1800,0); for(i=1;i<=5;i++)add(i,320,1); add(5,900,1); add(6,3400,2);
-  for(i=7;i<=16;i++)add(i,240,3); for(i=17;i<=21;i++)add(i,220,4); add(21,2200,4);
+  for(i=7;i<=9;i++)add(i,420,3); for(i=10;i<=20;i++)add(i,420,4); add(21,2800,5);
   var t=0;s.forEach(function(e){e.t0=t;t+=e.ms;});s.total=t;
-  s.ph=[0,1,2,3,4].map(function(p){var a=s.filter(function(e){return e.ph===p;});return[a[0].t0,a[a.length-1].t0+a[a.length-1].ms];});
+  s.ph=[0,1,2,3,4,5].map(function(p){var a=s.filter(function(e){return e.ph===p;});return[a[0].t0,a[a.length-1].t0+a[a.length-1].ms];});
   return s;
 })();
 function img(k){return IMG&&IMG[k]?IMG[k]:'';}
@@ -560,6 +562,18 @@ function buildMedia(kind,box){
       '<input type="range" class="scrub" id="spScrub" min="0" max="'+SEQ.total+'" step="20" value="0" aria-label="Zeitpunkt der Animation">'+
       '<div class="phs" id="spPh">'+PH.map(function(p,i){return '<button type="button" data-p="'+i+'">'+(i+1)+' '+p[0]+'</button>';}).join('')+'</div>'+
       '<div class="box phtxt nosay"><h3 id="spH"></h3><p id="spT" style="margin:0"></p></div>';
+    var mk=md.querySelector('svg.mk');
+    mk.insertAdjacentHTML('afterbegin',
+      '<defs><pattern id="hz" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="12" height="12" fill="rgba(255,212,0,.6)"/><rect width="5" height="12" fill="rgba(255,250,200,.85)"/></pattern>'+
+      '<marker id="ar" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1b2430"/></marker></defs>'+
+      '<g id="ovG" style="opacity:0;transition:opacity .35s">'+
+        '<rect x="'+SV.x+'" y="'+SV.y+'" width="'+SV.w+'" height="'+SV.h+'" fill="none" stroke="#ffffff" stroke-width="4" stroke-dasharray="10 6"/>'+
+        '<rect id="ovO" x="'+SV.x+'" y="'+SV.band[0]+'" width="0" height="'+(SV.band[1]-SV.band[0])+'" fill="url(#hz)" stroke="#e0a800" stroke-width="3"/>'+
+        '<g transform="translate(640 492)"><rect x="-175" y="-30" width="350" height="60" rx="12" fill="#1b2430" opacity=".88"/>'+
+        '<text y="-8" style="font-size:19px;font-weight:700" fill="#ffffff">Muffe über der Schaltverzahnung</text>'+
+        '<text id="ovT" y="16" style="font-size:17px;font-weight:600" fill="#ffd400"></text></g>'+
+      '</g>'+
+      '<path id="ovA" d="M357 62H477" stroke="#1b2430" stroke-width="7" marker-end="url(#ar)" style="opacity:0;transition:opacity .25s"/>');
     player=makePlayer();
     return SEQ.total;
   }
@@ -574,14 +588,15 @@ function makePlayer(){
   function ease(p){return p<0?0:p>1?1:p*p*(3-2*p);}
   function at(t){var e=SEQ[0];for(var i=0;i<SEQ.length;i++){if(SEQ[i].t0<=t)e=SEQ[i];else break;}return e;}
   function dev(ph,p,t){
-    var tip=ph===0?195:ph===1?195+33*ease(p):ph===2?228:ph===3?228+164*ease(p):392;
-    var rs=ph===0?0:ph===1?-12*ease(p):ph===2?-12:ph===3?(p<0.25?-12*(1-p/0.25):0):0;
+    var tip=ph===0?195:ph===1?195+33*ease(p):ph===2?228:ph===3?228+72*ease(p):ph===4?300+92*ease(p):392;
+    var rs=ph===0?0:ph===1?-12*ease(p):ph===2?-12:ph===3?(p<0.45?-12*(1-p/0.45):0):0;
     var L=((Lof(t)%P)+P)%P, s='';
     s+='<defs><clipPath id="dc"><rect x="0" y="34" width="460" height="176"/></clipPath></defs>';
     s+='<text x="125" y="16" text-anchor="middle">Schaltmuffe</text><text x="125" y="29" text-anchor="middle" class="mt">(Innenverzahnung)</text>';
     s+='<text x="247" y="16" text-anchor="middle">Synchronring</text><text x="247" y="29" text-anchor="middle" class="mt">(Sperrverzahnung)</text>';
     s+='<text x="362" y="16" text-anchor="middle">Losrad</text><text x="362" y="29" text-anchor="middle" class="mt">(Schaltverzahnung)</text>';
     s+='<g clip-path="url(#dc)">';
+    if(tip>300) s+='<rect x="300" y="34" width="'+(tip-300).toFixed(1)+'" height="176" style="fill:rgba(255,212,0,.38);stroke:#e0a800;stroke-width:2;stroke-dasharray:6 4"/>';
     for(var k=-1;k<7;k++){
       var ym=40+k*P, yr=40+k*P+P/2+rs, yl=40+k*P+P/2+L-P;
       s+='<polygon points="'+(tip-120)+','+(ym-10)+' '+(tip-10)+','+(ym-10)+' '+tip+','+ym+' '+(tip-10)+','+(ym+10)+' '+(tip-120)+','+(ym+10)+'" style="fill:var(--muffe)"/>';
@@ -591,14 +606,23 @@ function makePlayer(){
     s+='</g>';
     var sp=speed(t);
     if(sp>0.02) s+='<path d="M440 92v40m-6-8l6 9l6-9" style="fill:none;stroke:var(--ink);stroke-width:2.2;opacity:'+Math.min(1,sp+0.2).toFixed(2)+'"/>';
-    s+='<text x="230" y="222" text-anchor="middle" class="mt">'+(sp>0.02?'Das Losrad dreht noch schneller als die Welle':'Gleichlauf: Losrad und Welle gleich schnell')+'</text>';
+    if(ph===1||ph===3||ph===4) s+='<path d="M'+(tip-95)+' 200h50m-8-6l9 6l-9 6" style="fill:none;stroke:#ffffff;stroke-width:3"/>';
+    var msg=ph>=5?'Gang eingelegt: Die Muffe greift ganz in die Schaltverzahnung':ph===4?'Die Muffe schiebt sich über die Schaltverzahnung':sp>0.02?'Das Losrad dreht noch schneller als die Welle':'Gleichlauf: Losrad und Welle gleich schnell';
+    s+='<text x="230" y="222" text-anchor="middle" class="mt"'+(ph>=4?' style="font-weight:700;fill:var(--ink)"':'')+'>'+msg+'</text>';
     $('spDev').innerHTML=s;
     var nL=Math.round(2000+600*sp);
     $('rL').style.width=(62*nL/2000)+'%'; $('rLt').textContent=nL+' min⁻¹';
   }
   function draw(){
     var e=at(t), ph=e.ph, r=SEQ.ph[ph], p=(t-r[0])/Math.max(1,r[1]-r[0]);
-    if(e.f!==curF){curF=e.f;$('spImg').src=img('s'+(e.f<10?'0':'')+e.f);moveMk($('media'),FA[e.f]/12*153);}
+    if(e.f!==curF){curF=e.f;$('spImg').src=img('s'+(e.f<10?'0':'')+e.f);
+      var dx=FA[e.f]/12*153, ov=Math.max(0,Math.min(SV.w,SV.r0+dx-SV.x));
+      moveMk($('media'),dx);
+      $('ovO').setAttribute('width',ov.toFixed(1));
+      $('ovT').textContent='überdeckt: '+Math.round(ov/SV.w*100)+' %';
+      $('ovA').setAttribute('transform','translate('+dx.toFixed(1)+' 0)');}
+    $('ovG').style.opacity=ph>=3?1:0;
+    $('ovA').style.opacity=(ph===1||ph===3||ph===4)?1:0;
     if(ph!==curP){curP=ph;$('spH').textContent=(ph+1)+'. '+PH[ph][0];$('spT').textContent=PH[ph][1];
       $('spPh').querySelectorAll('button').forEach(function(b){b.classList.toggle('on',+b.dataset.p===ph);});}
     $('spScrub').value=Math.round(t);
@@ -644,7 +668,7 @@ function SYNC(b){
     partsList([1,2,3,4,5,6,7,8,9],g?'Losrad Z4':'Losrad (im Bild Z4)')+note,
     sc:{media:'parts'}},
    {k:'Schritt 2 · Schalten',t:'Schalten Schritt für Schritt',h:
-    '<p>Die Animation zeigt das Einlegen des 1. Gangs in fünf Phasen: Leerlauf, Vorsynchronisieren, Sperren und Angleichen, Durchschalten, Gang eingelegt. Links siehst du den Schnitt aus dem 3D-Modell. Darunter zeigt die abgewickelte Ansicht die drei Verzahnungen von oben. Dort erkennst du, wie der Synchronring die Muffe sperrt, bis das Losrad genauso schnell dreht wie die Welle.</p>'+
+    '<p>Die Animation zeigt das Einlegen des 1. Gangs in sechs Phasen: Leerlauf, Vorsynchronisieren, Sperren und Angleichen, Durchschalten, Überschieben auf die Schaltverzahnung, Gang eingelegt. Links siehst du den Schnitt aus dem 3D-Modell. Die Schaltverzahnung ist weiß umrandet. Gelb markiert ist der Teil, den die Schaltmuffe schon überdeckt. Darunter zeigt die abgewickelte Ansicht die drei Verzahnungen von oben. Dort siehst du, wie der Synchronring die Muffe erst sperrt und wie sich die Muffenzähne danach in die Lücken der Schaltverzahnung schieben.</p>'+
     '<div data-slot="sync"></div>',
     sc:{media:'sync'}}
   ];
