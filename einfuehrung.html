@@ -51,7 +51,7 @@ h1{margin:0;font-size:clamp(22px,3.6vw,30px);line-height:1.15;text-wrap:balance}
 @media (max-width:1080px){.stage{grid-template-columns:minmax(0,1fr)}}
 .fig{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
 .svgbox{overflow-x:auto}
-#sv{display:block;width:100%;min-width:520px;height:auto;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+#sv{display:block;width:100%;height:auto;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 .keys{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--mut)}
 .keys span{display:inline-flex;align-items:center;gap:6px}
 .keys i{display:inline-block;width:14px;height:10px;border-radius:2px}
@@ -101,6 +101,25 @@ th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;lett
 .vo input{width:18px;height:18px;accent-color:var(--acc)}
 #play[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 @media (max-width:640px){.ctl .btn{min-height:44px}.ctl .grow{order:-1;flex-basis:100%}}
+/* Einspaltig (Tablet, Handy): Bild bleibt oben stehen, Steuerleiste unten – Text scrollt dazwischen */
+@media (max-width:1080px){
+  .fig{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;max-height:64vh;overflow-y:auto;box-shadow:0 8px 18px rgba(0,0,0,.14)}
+  #sv{max-height:42vh}
+  .shot{max-width:calc(36vh * var(--w) / var(--h));margin-inline:auto}
+  .dev svg{max-height:26vh}
+  .ctl{position:sticky;bottom:env(safe-area-inset-bottom,0px);z-index:5;box-shadow:0 -6px 16px rgba(0,0,0,.12)}
+}
+@media (max-width:700px){
+  .wrap{gap:10px;padding-block:12px 16px}
+  .fig{padding:8px;border-radius:12px}
+  .keys,.shotcap{display:none}
+  #cap{font-size:13px;margin-top:2px}
+  .lbl{font-size:24px}.lbl.sh{font-size:16px}.lbl.small{font-size:18px}.endtxt{font-size:15px}
+  .ctl{gap:6px;padding:6px 8px}.ctl .btn{padding:6px 10px}
+  .ctl .lg{display:none}
+  .vo{font-size:13px}
+  .txt{padding:14px 16px}
+}
 
 /* ---- Bilder aus dem 3D-Modell ---- */
 #media{display:flex;flex-direction:column;gap:10px}
@@ -208,8 +227,8 @@ svg.dim .lbl.gl:not(.vis),svg .lbl.gl:not(.vis){opacity:0}
     </section>
   </main>
   <div class="ctl">
-    <button class="btn" id="prev" type="button">← Zurück</button>
-    <button class="btn" id="play" type="button" aria-pressed="false">▶ Als Video abspielen</button>
+    <button class="btn" id="prev" type="button" aria-label="Zurück">← <span class="lg">Zurück</span></button>
+    <button class="btn" id="play" type="button" aria-pressed="false">▶ <span class="lg">Als </span>Video<span class="lg"> abspielen</span></button>
     <label class="vo"><input type="checkbox" id="voice"> Vorlesen</label>
     <div class="grow"><div class="cnt" id="cnt"></div><div class="prog"><i id="pbar"></i></div></div>
     <button class="btn pri" id="next" type="button">Weiter →</button>
@@ -243,7 +262,7 @@ var BAU={
   hubs:[{id:'34',x:40,sh:'out',n:'3./4.'},{id:'12',x:124,sh:'out',n:'1./2.'},{id:'5R',x:222,sh:'out',n:'5./R'}],
   dogs:{Z1:'34'},
   gang:{1:['Z4','Z3','12',1],2:['Z6','Z5','12',-1],3:['Z8','Z7','34',1],4:['Z1',null,'34',-1],5:['Z10','Z9','5R',1],6:['Z13','Z11','5R',-1]},
-  ends:[{x:-120,y:'A',t:'vom Motor (Kupplung)',a:'start'},{x:345,y:'A',t:'zur Gelenkwelle',a:'end'}]
+  ends:[{x:-120,y:'A',t:'vom Motor',a:'start'},{x:345,y:'A',t:'zur Gelenkwelle',a:'end'}]
  },
  u:{key:'ungleichachsig',uebung:'uebung_ungleichachsig',name:'ungleichachsige',
   X:function(x){return 40+(x+120)*1.8;}, YA:135, YB:275,
@@ -255,7 +274,7 @@ var BAU={
   hubs:[{id:'12',x:45,sh:'out',n:'1./2.'},{id:'34',x:135,sh:'in',n:'3./4.'},{id:'5R',x:235,sh:'out',n:'5./R'}],
   dogs:{},
   gang:{1:['Z2','Z1','12',-1],2:['Z4','Z3','12',1],3:['Z5','Z6','34',-1],4:['Z7','Z8','34',1],5:['Z10','Z9','5R',-1],6:['Z13','Z11','5R',1]},
-  ends:[{x:-120,y:'A',t:'vom Motor (Kupplung)',a:'start',dy:-30},{x:-120,y:'B',t:'zum Achsantrieb',a:'start',dy:22}]
+  ends:[{x:-120,y:'A',t:'vom Motor',a:'start',dy:-30},{x:-120,y:'B',t:'zum Achsantrieb',a:'start',dy:22}]
  }
 };
 // abgeleitete Werte
@@ -267,16 +286,26 @@ var BAU={
   // Im Schema sitzt jedes Losrad direkt an seiner Schaltverzahnung; sein Partnerrad rückt mit.
   for(var gk in B.gang){var gi=B.gang[gk],h=B.H[gi[2]],nx=h.X+gi[3]*(SY.k1+GW/2);B.G[gi[0]].X=nx;if(gi[1])B.G[gi[1]].X=nx;}
   if(B.G.Z1.type==='fest'&&B.dogs.Z1)B.G.Z2.X=B.G.Z1.X;
-  B.shafts.forEach(function(s){s.X0=B.X(s.x0);s.X1=B.X(s.x1);});
-  if(k==='g'){var h34=B.H['34'];B.shafts[0].X1=h34.X-SY.hw-4;B.shafts[1].X0=h34.X-SY.hw-1;}
   var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
   I.X=B.G.Z13.X+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
+  // Wellen enden kurz hinter den Rädern; der Bildausschnitt folgt dem Inhalt (kurz genug fürs Handy)
+  var xs=B.gears.map(function(q){return q.X;}).concat([I.X]), minX=Math.min.apply(null,xs)-GW/2, maxX=Math.max.apply(null,xs)+GW/2;
+  var S={}; B.shafts.forEach(function(s){S[s.id]=s;});
+  if(k==='g'){var h34=B.H['34'];
+    S.in.X0=minX-145; S.in.X1=h34.X-SY.hw-4; S.out.X0=h34.X-SY.hw-1; S.out.X1=maxX+115; S.cs.X0=minX-8; S.cs.X1=maxX+8;
+    B.VB=[Math.min(S.in.X0-28,S.cs.X0-160),0]; B.VB.push(S.out.X1+30-B.VB[0],420);
+  }else{
+    S.in.X0=S.out.X0=minX-145; S.in.X1=S.out.X1=maxX+8;
+    B.VB=[S.in.X0-28,0]; B.VB.push(maxX+105-B.VB[0],420);
+  }
+  B.S=S;
 });
 
 /* ===== Schema zeichnen ===== */
 var sv=$('sv'), cur='g', B=BAU.g, P={}, LB=[], flowP, flowDot, spinIn, spinOut;
 function build(){
   B=BAU[cur]; sv.innerHTML=''; P={}; LB=[];
+  sv.setAttribute('viewBox',B.VB.map(function(v){return v.toFixed(1);}).join(' '));
   var defs=E('defs',null,sv);
   var mk=E('marker',{id:'ah',viewBox:'0 0 10 10',refX:'5',refY:'5',markerWidth:'4',markerHeight:'4',orient:'auto-start-reverse'},defs);
   E('path',{d:'M0 0L10 5L0 10z',style:'fill:var(--flow)'},mk);
@@ -285,11 +314,11 @@ function build(){
   // Hilfslinien
   if(cur==='g'){
     var ax=E('g',{class:'ov',id:'ov-axis'},gOv);
-    E('line',{x1:20,y1:B.YA,x2:815,y2:B.YA,'stroke-dasharray':'2 6'},ax);
-    E('text',{x:560,y:B.YA+122},ax).textContent='Eingang und Ausgang auf einer Achse';
-    E('line',{x1:560,y1:B.YA+110,x2:560,y2:B.YA+4},ax);
+    E('line',{x1:B.VB[0]+4,y1:B.YA,x2:B.VB[0]+B.VB[2]-4,y2:B.YA,'stroke-dasharray':'2 6'},ax);
+    E('text',{x:B.S.in.X0-10,y:24},ax).textContent='Eingang und Ausgang auf einer Achse';
+    E('line',{x1:B.S.in.X0,y1:30,x2:B.S.in.X0,y2:B.YA-6},ax);
   }else{
-    var cd=E('g',{class:'ov',id:'ov-cd'},gOv), cx=812;
+    var cd=E('g',{class:'ov',id:'ov-cd'},gOv), cx=B.VB[0]+B.VB[2]-12;
     E('line',{x1:cx-12,y1:B.YA,x2:cx+6,y2:B.YA},cd);E('line',{x1:cx-12,y1:B.YB,x2:cx+6,y2:B.YB},cd);
     E('line',{x1:cx,y1:B.YA+4,x2:cx,y2:B.YB-4,'marker-start':'url(#ah)','marker-end':'url(#ah)',style:'stroke:var(--mut)'},cd);
     var tt=E('text',{x:cx-8,y:(B.YA+B.YB)/2,'text-anchor':'end'},cd); tt.textContent='Achsabstand';
@@ -346,14 +375,14 @@ function build(){
   B.shafts.forEach(function(s){
     var y=s.y==='A'?B.YA:B.YB, t;
     if(cur==='g'){
-      if(s.id==='in') t=lbl(X(s.x0)+16,y-12,'start',s.name);
-      else if(s.id==='out') t=lbl(X(s.x1),y-12,'end',s.name);
-      else t=lbl(X(s.x0)-12,y+5,'end',s.name);
-    }else t=lbl(X(s.x0)+16,y-12,'start',s.name);
+      if(s.id==='in') t=lbl(s.X0+16,y-12,'start',s.name);
+      else if(s.id==='out') t=lbl(s.X1,y-12,'end',s.name);
+      else t=lbl(s.X0-12,y+5,'end',s.name);
+    }else t=lbl(s.X0+16,y-12,'start',s.name);
     t.classList.add('sh'); t.style.fill=SC[s.id]; reg(t,s.id,true);
   });
   B.ends.forEach(function(e){
-    var y=(e.y==='A'?B.YA:B.YB)+(e.dy||22), t=E('text',{class:'endtxt',x:B.X(e.x)+(e.a==='end'?0:16),y:y,'text-anchor':e.a},gL); t.textContent=e.t;
+    var y=(e.y==='A'?B.YA:B.YB)+(e.dy||22), t=E('text',{class:'endtxt',x:(e.a==='end'?B.S.out.X1:B.S.in.X0+16),y:y,'text-anchor':e.a},gL); t.textContent=e.t;
   });
   B.gears.forEach(function(q){
     var up=q.sy===B.YA, t=lbl(q.X,up?q.sy-q.r-8:q.sy+q.r+18,'middle',q.id); t.classList.add('gl'); reg(t,q.id);
@@ -363,8 +392,8 @@ function build(){
     var below=(cur==='u'&&h.sh==='out'), t=lbl(h.X,below?h.sy+42:h.sy-32,'middle',h.n); t.classList.add('gl','small'); reg(t,'m'+h.id);
   });
   // Drehrichtungs-Anzeiger
-  spinIn=spinner(X(-120)-14,B.YA,'Motor');
-  var so=cur==='g'?{x:X(345)+16,y:B.YA}:{x:X(-120)-14,y:B.YB};
+  spinIn=spinner(B.S.in.X0-14,B.YA,'Motor');
+  var so=cur==='g'?{x:B.S.out.X1+16,y:B.YA}:{x:B.S.out.X0-14,y:B.YB};
   spinOut=spinner(so.x,so.y,'Abtrieb');
   // Kraftfluss
   flowP=E('path',{id:'flowP',d:''},gF);
@@ -385,7 +414,7 @@ function flowSteps(g){
   function kx(id){var q=G[id];return xh-Math.sign(xh-q.X)*(SY.k0+SY.k1)/2;}
   if(cur==='g'){
     var lv=A-16;
-    add('Eingangswelle',['in'],[[X(-120),A],[G.Z1.X,A]]);
+    add('Eingangswelle',['in'],[[B.S.in.X0,A],[G.Z1.X,A]]);
     if(g===4){
       add('Z1 Antriebsrad mit Schaltverzahnung',['Z1','kZ1'],[[G.Z1.X,lv],[kx('Z1'),lv]]);
     }else{
@@ -405,10 +434,10 @@ function flowSteps(g){
     }
     add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lv]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,A]]);
-    add('Ausgangswelle',['out'],[[X(345),A]]);
+    add('Ausgangswelle',['out'],[[B.S.out.X1,A]]);
   }else if(h.sh==='out'){
     var lw=Bv-16, qq=G[los];
-    add('Eingangswelle',['in'],[[X(-120),A],[qq.X,A]]);
+    add('Eingangswelle',['in'],[[B.S.in.X0,A],[qq.X,A]]);
     if(g===6){
       add('Z11 Festrad Rückwärtsgang',['Z11'],[[qq.X,I.cy-12]]);
       add('Z12 Rücklaufrad (kehrt die Drehrichtung um)',['Z12'],[[I.X,I.cy-12],[I.X,I.cy+12]]);
@@ -420,16 +449,16 @@ function flowSteps(g){
     add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lw]]);
     add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lw]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,Bv]]);
-    add('Ausgangswelle',['out'],[[X(-120),Bv]]);
+    add('Ausgangswelle',['out'],[[B.S.out.X0,Bv]]);
   }else{
     var lu=A+16, qu=G[los];
-    add('Eingangswelle',['in'],[[X(-120),A],[xh,A]]);
+    add('Eingangswelle',['in'],[[B.S.in.X0,A],[xh,A]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,lu]]);
     add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lu]]);
     add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lu]]);
     add(los+' Losrad '+nm,[los],[[qu.X,lu]]);
     add(fest+' Festrad '+nm,[fest],[[qu.X,Bv]]);
-    add('Ausgangswelle',['out'],[[X(-120),Bv]]);
+    add('Ausgangswelle',['out'],[[B.S.out.X0,Bv]]);
   }
   return st;
 }
@@ -533,7 +562,7 @@ var SEQ=(function(){
 })();
 function img(k){return IMG&&IMG[k]?IMG[k]:'';}
 function shot(id,src,w,h,mk,alt){
-  return '<div class="shot"><img id="'+id+'" src="'+src+'" width="'+w+'" height="'+h+'" alt="'+alt+'"><svg class="mk" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+
+  return '<div class="shot" style="--w:'+w+';--h:'+h+'"><img id="'+id+'" src="'+src+'" width="'+w+'" height="'+h+'" alt="'+alt+'"><svg class="mk" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+
     (mk||[]).map(function(m){return '<g data-n="'+m[0]+'"'+(m[3]?' data-m="1"':'')+' transform="translate('+m[1]+' '+m[2]+')"><circle r="19"/><text>'+m[0]+'</text></g>';}).join('')+'</svg></div>';
 }
 function seg(id,opts,sel){return '<div class="seg" role="group" id="'+id+'">'+opts.map(function(o,i){return '<button type="button" data-v="'+o[0]+'" aria-pressed="'+(o[0]===sel)+'">'+o[1]+'</button>';}).join('')+'</div>';}
@@ -682,8 +711,8 @@ function SYNC(b){
     partsList([1,2,3,4,5,6,7,8,9],g?'Losrad Z4':'Losrad (im Bild Z4)')+note,
     sc:{media:'parts'}},
    {k:'Schritt 2 · Schalten',t:'Schalten Schritt für Schritt',h:
-    '<p>Die Animation zeigt das Einlegen des 1. Gangs in sechs Phasen: Leerlauf, Vorsynchronisieren, Sperren und Angleichen, Durchschalten, Überschieben auf die Schaltverzahnung, Gang eingelegt. Links siehst du den Schnitt aus dem 3D-Modell. Die Schaltverzahnung ist weiß umrandet. Gelb markiert ist der Teil, den die Schaltmuffe schon überdeckt. Darunter zeigt die abgewickelte Ansicht die drei Verzahnungen von oben. Dort siehst du, wie der Synchronring die Muffe erst sperrt und wie sich die Muffenzähne danach in die Lücken der Schaltverzahnung schieben.</p>'+
-    '<div data-slot="sync"></div>',
+    '<div data-slot="sync"></div>'+
+    '<p>Die Animation zeigt das Einlegen des 1. Gangs in sechs Phasen: Leerlauf, Vorsynchronisieren, Sperren und Angleichen, Durchschalten, Überschieben auf die Schaltverzahnung, Gang eingelegt. Links siehst du den Schnitt aus dem 3D-Modell. Die Schaltverzahnung ist weiß umrandet. Gelb markiert ist der Teil, den die Schaltmuffe schon überdeckt. Darunter zeigt die abgewickelte Ansicht die drei Verzahnungen von oben. Dort siehst du, wie der Synchronring die Muffe erst sperrt und wie sich die Muffenzähne danach in die Lücken der Schaltverzahnung schieben.</p>',
     sc:{media:'sync'}}
   ];
 }
@@ -933,7 +962,7 @@ function schedule(){
   }else{bar(est);tmr=setTimeout(fin,est);}
 }
 function setPlaying(p){
-  playing=p; $('play').setAttribute('aria-pressed',p?'true':'false'); $('play').textContent=p?'❚❚ Pause':'▶ Als Video abspielen';
+  playing=p; $('play').setAttribute('aria-pressed',p?'true':'false'); $('play').innerHTML=p?'❚❚ Pause':'▶ <span class="lg">Als </span>Video<span class="lg"> abspielen</span>';
   if(!p){clearTimeout(tmr);stopSpeech();bar(0);}
 }
 $('play').onclick=function(){
