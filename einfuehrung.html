@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Getriebe Schritt für Schritt</title>
+<style>
+/* Layout: Kopf mit Bauart-Wahl, Kapitelleiste, darunter Schema (links) und Erklärtext (rechts), Steuerleiste unten */
+:root{
+  --bg:#f3f5f7; --card:#ffffff; --ink:#1b2430; --mut:#5d6877; --line:#cdd5de; --soft:#e8eef5;
+  --acc:#2f7fbf; --onacc:#ffffff;
+  --in:#2f6bff; --out:#4f9a12; --cs:#e8680c; --loose:#e5393a; --sync:#12a86a; --muffe:#3f4a5c; --idl:#8a94a3;
+  --flow:#d6203a; --on:#ffb400; --ok:#1f8f4e; --bad:#d6203a;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1f26; --card:#242a33; --ink:#e8edf2; --mut:#9aa7b6; --line:#3a4350; --soft:#2c3440;
+    --acc:#5aa9e6; --onacc:#0b1a28; --in:#6b95ff; --out:#8fd63a; --cs:#ff8a3d; --loose:#ff5c5c; --sync:#2fd08f; --muffe:#aab6c6; --idl:#9aa7b6;
+    --flow:#ff4560; --ok:#4fcf86; --bad:#ff5c6c; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1f26; --card:#242a33; --ink:#e8edf2; --mut:#9aa7b6; --line:#3a4350; --soft:#2c3440;
+  --acc:#5aa9e6; --onacc:#0b1a28; --in:#6b95ff; --out:#8fd63a; --cs:#ff8a3d; --loose:#ff5c5c; --sync:#2fd08f; --muffe:#aab6c6; --idl:#9aa7b6;
+  --flow:#ff4560; --ok:#4fcf86; --bad:#ff5c6c; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 40px;display:flex;flex-direction:column;gap:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.back{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-weight:600}
+.ttl{flex:1 1 260px;min-width:0}
+.tag{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:600}
+h1{margin:0;font-size:clamp(22px,3.6vw,30px);line-height:1.15;text-wrap:balance}
+.tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tabs button{border:0;background:transparent;border-radius:7px;padding:7px 14px;font-weight:600;color:var(--mut)}
+.tabs button[aria-selected="true"]{background:var(--acc);color:var(--onacc)}
+.rail{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px 4px 4px;font-size:13px;color:var(--mut);white-space:nowrap}
+.chip b{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--soft);color:var(--ink);font-size:12px}
+.chip.seen b{background:color-mix(in srgb,var(--acc) 22%,var(--soft))}
+.chip.cur{border-color:var(--acc);color:var(--ink);font-weight:600}
+.chip.cur b{background:var(--acc);color:var(--onacc)}
+.stage{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1080px){.stage{grid-template-columns:minmax(0,1fr)}}
+.fig{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.svgbox{overflow-x:auto}
+#sv{display:block;width:100%;min-width:520px;height:auto;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--mut)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.keys i{display:inline-block;width:14px;height:10px;border-radius:2px}
+#cap{margin-top:6px;font-size:14px;color:var(--ink);min-height:1.5em}
+.txt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;min-width:0}
+.kick{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.txt h2{margin:2px 0 10px;font-size:22px;line-height:1.2;text-wrap:balance}
+#sb{display:flex;flex-direction:column;gap:10px;max-width:62ch}
+#sb p,#sb ol,#sb ul{margin:0}
+#sb ol,#sb ul{padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.cin{color:var(--in)}.cout{color:var(--out)}.ccs{color:var(--cs)}.clo{color:var(--loose)}
+.box{background:var(--soft);border-radius:10px;padding:10px 14px}
+.box h3{margin:0 0 4px;font-size:15px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.leg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px}
+.leg div{display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.3}
+.leg svg{flex:0 0 44px;width:44px;height:44px}
+.fl{display:flex;flex-direction:column;gap:2px;padding:0;margin:0;list-style:none;counter-reset:f}
+.fl li{counter-increment:f;display:flex;gap:8px;align-items:baseline;padding:3px 8px;border-radius:6px;font-size:14px;color:var(--mut);transition:background .25s,color .25s}
+.fl li::before{content:counter(f);display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:50%;background:var(--soft);font-size:11px;font-weight:700;color:var(--ink)}
+.fl li.on{color:var(--ink);background:color-mix(in srgb,var(--on) 22%,transparent)}
+.fl li.on::before{background:var(--on);color:#1b2430}
+.gears{display:flex;flex-wrap:wrap;gap:6px}
+.gears button{min-width:44px;min-height:40px;border:1px solid var(--line);background:var(--card);border-radius:8px;font-weight:700}
+.gears button.sel{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.ratio{font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 14px;font-weight:600}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.q{display:flex;flex-direction:column;gap:6px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.q:last-of-type{border-bottom:0}
+.q .opts{display:flex;flex-direction:column;gap:5px}
+.q .opts button{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;font-size:15px}
+.q .opts button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 16%,var(--card))}
+.q .opts button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--card))}
+.q .fb{font-size:14px;color:var(--mut)}
+.score{font-weight:700}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.ctl .grow{flex:1 1 160px;min-width:120px;display:flex;flex-direction:column;gap:4px}
+.cnt{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.prog{height:6px;background:var(--soft);border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--acc)}
+.vo{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--mut)}
+.vo input{width:18px;height:18px;accent-color:var(--acc)}
+#play[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media (max-width:640px){.ctl .btn{min-height:44px}.ctl .grow{order:-1;flex-basis:100%}}
+
+/* ---- Schema ---- */
+.part{transition:opacity .35s}
+svg.dim .part:not(.hi){opacity:.16}
+svg.dim .lbl.gl:not(.vis),svg .lbl.gl:not(.vis){opacity:0}
+.lbl{fill:var(--ink);font-size:15px;font-weight:700;transition:opacity .3s}
+.lbl.sh{font-size:14px;font-weight:600}
+.lbl.small{font-size:12px;font-weight:600;fill:var(--mut)}
+.lbl.gl{text-anchor:middle}
+.lbl.pop{animation:pop .55s both;animation-delay:var(--d)}
+.gear.pop rect.body{animation:flash 1s both;animation-delay:var(--d)}
+@keyframes pop{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+@keyframes flash{0%,100%{stroke-width:2}35%{stroke-width:6}}
+.lbl.gl{transform-box:fill-box;transform-origin:center}
+.shaft line{stroke-width:7;stroke-linecap:round}
+.gear rect.body{stroke-width:2}
+.gear.fest rect.body{fill:color-mix(in srgb,var(--c) 26%,transparent);stroke:var(--c)}
+.gear.los rect.body{fill:color-mix(in srgb,var(--loose) 24%,transparent);stroke:var(--loose)}
+.gear .mk{stroke:var(--ink);stroke-width:2;fill:none}
+.gear .brg{fill:var(--card);stroke:var(--ink);stroke-width:1.6}
+.dog rect{fill:var(--loose)}
+.dog.fix rect{fill:var(--in)}
+.syn rect{fill:var(--sync)}
+.muf{transition:transform .6s cubic-bezier(.3,.7,.3,1)}
+.muf rect{fill:var(--muffe)}
+.muf line{stroke:var(--bg);stroke-width:2}
+.idler rect{fill:color-mix(in srgb,var(--idl) 22%,transparent);stroke:var(--idl);stroke-width:2;stroke-dasharray:5 3}
+.idler line{stroke:var(--idl);stroke-width:4;stroke-linecap:round}
+.on{filter:drop-shadow(0 0 3px var(--on)) drop-shadow(0 0 2px var(--on))}
+.gear.on rect.body,.idler.on rect{stroke:var(--on);stroke-width:3.5}
+#flowP{fill:none;stroke:var(--flow);stroke-width:5;stroke-linejoin:round;stroke-linecap:round;opacity:.92}
+#flowDot{fill:var(--flow);stroke:var(--card);stroke-width:2}
+.ov{opacity:0;transition:opacity .4s}
+.ov.vis{opacity:1}
+.ov line{stroke:var(--mut);stroke-width:1.5}
+.ov text{fill:var(--mut);font-size:13px;font-weight:600}
+.spin{opacity:0;transition:opacity .3s}
+.spin.vis{opacity:1}
+.spin ellipse{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:6 4;animation:spin 1s linear infinite}
+.spin.rev ellipse{animation-direction:reverse}
+.spin text{fill:var(--mut);font-size:12px;font-weight:600}
+@keyframes spin{to{stroke-dashoffset:-20}}
+.endtxt{fill:var(--mut);font-size:12px}
+@media (prefers-reduced-motion:reduce){
+  .lbl.pop,.gear.pop rect.body,.spin ellipse{animation:none}
+  .muf,.part,.ov{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <button class="back" id="back" type="button">← Übersicht</button>
+    <div class="ttl"><div class="tag">Einführung · Wechselgetriebe</div><h1>Getriebe Schritt für Schritt</h1></div>
+    <div class="tabs" role="tablist" aria-label="Bauart wählen">
+      <button type="button" role="tab" id="tab-g" data-b="g" aria-selected="true">Gleichachsig</button>
+      <button type="button" role="tab" id="tab-u" data-b="u" aria-selected="false">Ungleichachsig</button>
+    </div>
+  </header>
+  <nav class="rail" id="rail" aria-label="Kapitel"></nav>
+  <main class="stage">
+    <figure class="fig">
+      <div class="svgbox"><svg id="sv" viewBox="0 0 830 420" role="img" aria-label="Getriebeschema"></svg></div>
+      <div class="keys" id="keys"></div>
+      <figcaption id="cap" aria-live="polite"></figcaption>
+    </figure>
+    <section class="txt" aria-live="polite">
+      <div class="kick" id="kick"></div>
+      <h2 id="st"></h2>
+      <div id="sb"></div>
+    </section>
+  </main>
+  <div class="ctl">
+    <button class="btn" id="prev" type="button">← Zurück</button>
+    <button class="btn" id="play" type="button" aria-pressed="false">▶ Als Video abspielen</button>
+    <label class="vo"><input type="checkbox" id="voice"> Vorlesen</label>
+    <div class="grow"><div class="cnt" id="cnt"></div><div class="prog"><i id="pbar"></i></div></div>
+    <button class="btn pri" id="next" type="button">Weiter →</button>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var NS='http://www.w3.org/2000/svg';
+function E(t,a,p){var e=document.createElementNS(NS,t);if(a)for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+var RPX=1.75, GW=24;                 // 1 Zahn = 1,75 px Radius (Modul 2,5 mm, Maßstab 1,4 px/mm); Radbreite im Schema
+var reduce=false; try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(x){}
+var fmt=function(v,d){return v.toFixed(d===undefined?2:d).replace('.',',');};
+var gn=function(g){return g===6?'Rückwärtsgang':g+'. Gang';};
+var SC={in:'var(--in)',out:'var(--out)',cs:'var(--cs)'};
+
+/* ===== Daten beider Getriebe (wie im 3D-Modell) ===== */
+var BAU={
+ g:{key:'gleichachsig',uebung:'uebung_gleichachsig',name:'gleichachsige',
+  X:function(x){return 40+(x+120)*1.62;}, YA:150, YB:290,
+  shafts:[{id:'in',name:'Eingangswelle',y:'A',x0:-120,x1:14},{id:'out',name:'Ausgangswelle',y:'A',x0:26,x1:345},{id:'cs',name:'Vorgelegewelle',y:'B',x0:-20,x1:275}],
+  gears:[['Z1',35,0,'in','fest'],['Z2',45,0,'cs','fest'],['Z3',21,157.5,'cs','fest'],['Z4',59,157.5,'out','los'],
+         ['Z5',30,90.5,'cs','fest'],['Z6',50,90.5,'out','los'],['Z7',38,73.5,'cs','fest'],['Z8',42,73.5,'out','los'],
+         ['Z9',49,255.5,'cs','fest'],['Z10',31,255.5,'out','los'],['Z11',20,188.5,'cs','fest'],['Z13',50,188.5,'out','los']],
+  idler:{t:20,x:188.5,top:'Z13',bot:'Z11'},
+  hubs:[{id:'34',x:40,sh:'out',n:'3./4.'},{id:'12',x:124,sh:'out',n:'1./2.'},{id:'5R',x:222,sh:'out',n:'5./R'}],
+  dogs:{Z1:'34'},
+  gang:{1:['Z4','Z3','12',1],2:['Z6','Z5','12',-1],3:['Z8','Z7','34',1],4:['Z1',null,'34',-1],5:['Z10','Z9','5R',1],6:['Z13','Z11','5R',-1]},
+  ends:[{x:-120,y:'A',t:'vom Motor (Kupplung)',a:'start'},{x:345,y:'A',t:'zur Gelenkwelle',a:'end'}]
+ },
+ u:{key:'ungleichachsig',uebung:'uebung_ungleichachsig',name:'ungleichachsige',
+  X:function(x){return 40+(x+120)*1.8;}, YA:135, YB:275,
+  shafts:[{id:'in',name:'Eingangswelle',y:'A',x0:-120,x1:292},{id:'out',name:'Ausgangswelle',y:'B',x0:-120,x1:292}],
+  gears:[['Z1',17,11.5,'in','fest'],['Z2',63,11.5,'out','los'],['Z3',26,78.5,'in','fest'],['Z4',54,78.5,'out','los'],
+         ['Z5',34,101.5,'in','los'],['Z6',46,101.5,'out','fest'],['Z7',40,168.5,'in','los'],['Z8',40,168.5,'out','fest'],
+         ['Z9',46,201.5,'in','fest'],['Z10',34,201.5,'out','los'],['Z11',18,268.5,'in','fest'],['Z13',54,268.5,'out','los']],
+  idler:{t:18,x:268.5,top:'Z11',bot:'Z13'},
+  hubs:[{id:'12',x:45,sh:'out',n:'1./2.'},{id:'34',x:135,sh:'in',n:'3./4.'},{id:'5R',x:235,sh:'out',n:'5./R'}],
+  dogs:{},
+  gang:{1:['Z2','Z1','12',-1],2:['Z4','Z3','12',1],3:['Z5','Z6','34',-1],4:['Z7','Z8','34',1],5:['Z10','Z9','5R',-1],6:['Z13','Z11','5R',1]},
+  ends:[{x:-120,y:'A',t:'vom Motor (Kupplung)',a:'start',dy:-30},{x:-120,y:'B',t:'zum Achsantrieb',a:'start',dy:22}]
+ }
+};
+// abgeleitete Werte
+['g','u'].forEach(function(k){
+  var B=BAU[k]; B.G={}; B.T={};
+  B.sy=function(sh){var s=B.shafts.filter(function(q){return q.id===sh;})[0];return s.y==='A'?B.YA:B.YB;};
+  B.gears=B.gears.map(function(a){var q={id:a[0],t:a[1],x:a[2],sh:a[3],type:a[4]};q.X=B.X(q.x);q.sy=B.sy(q.sh);q.r=q.t*RPX;B.G[q.id]=q;B.T[q.id]=q.t;return q;});
+  var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
+  I.X=B.X(I.x)+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
+  B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);B.H[h.id]=h;});
+});
+
+/* ===== Schema zeichnen ===== */
+var sv=$('sv'), cur='g', B=BAU.g, P={}, LB=[], flowP, flowDot, spinIn, spinOut;
+function build(){
+  B=BAU[cur]; sv.innerHTML=''; P={}; LB=[];
+  var defs=E('defs',null,sv);
+  var mk=E('marker',{id:'ah',viewBox:'0 0 10 10',refX:'5',refY:'5',markerWidth:'4',markerHeight:'4',orient:'auto-start-reverse'},defs);
+  E('path',{d:'M0 0L10 5L0 10z',style:'fill:var(--flow)'},mk);
+  var gOv=E('g',null,sv), gP=E('g',null,sv), gF=E('g',null,sv), gL=E('g',null,sv);
+  var X=B.X;
+  // Hilfslinien
+  if(cur==='g'){
+    var ax=E('g',{class:'ov',id:'ov-axis'},gOv);
+    E('line',{x1:20,y1:B.YA,x2:815,y2:B.YA,'stroke-dasharray':'2 6'},ax);
+    E('text',{x:560,y:B.YA+122},ax).textContent='Eingang und Ausgang auf einer Achse';
+    E('line',{x1:560,y1:B.YA+110,x2:560,y2:B.YA+4},ax);
+  }else{
+    var cd=E('g',{class:'ov',id:'ov-cd'},gOv), cx=812;
+    E('line',{x1:cx-12,y1:B.YA,x2:cx+6,y2:B.YA},cd);E('line',{x1:cx-12,y1:B.YB,x2:cx+6,y2:B.YB},cd);
+    E('line',{x1:cx,y1:B.YA+4,x2:cx,y2:B.YB-4,'marker-start':'url(#ah)','marker-end':'url(#ah)',style:'stroke:var(--mut)'},cd);
+    var tt=E('text',{x:cx-8,y:(B.YA+B.YB)/2,'text-anchor':'end'},cd); tt.textContent='Achsabstand';
+    var t2=E('text',{x:cx-8,y:(B.YA+B.YB)/2+16,'text-anchor':'end'},cd); t2.textContent='100 mm';
+  }
+  // Wellen
+  B.shafts.forEach(function(s){
+    var y=s.y==='A'?B.YA:B.YB, g=E('g',{class:'part shaft',id:'p-'+s.id},gP);
+    E('line',{x1:X(s.x0),y1:y,x2:X(s.x1),y2:y,style:'stroke:'+SC[s.id]},g);
+    P[s.id]=g;
+  });
+  // Rücklaufrad
+  var I=B.idler, gi=E('g',{class:'part idler',id:'p-Z12'},gP);
+  E('line',{x1:I.X-18,y1:I.cy,x2:I.X+18,y2:I.cy},gi);
+  E('rect',{x:I.X-GW/2,y:I.cy-I.r,width:GW,height:2*I.r,rx:3},gi);
+  E('title',null,gi).textContent='Z12 Rücklaufrad ('+I.t+' Zähne)';
+  P.Z12=gi;
+  // Zahnräder
+  B.gears.forEach(function(q){
+    var g=E('g',{class:'part gear '+q.type,id:'p-'+q.id,style:'--c:'+SC[q.sh]},gP);
+    E('rect',{class:'body',x:q.X-GW/2,y:q.sy-q.r,width:GW,height:2*q.r,rx:3},g);
+    if(q.type==='fest'){
+      [-1,1].forEach(function(s){var y=q.sy+s*10;E('path',{class:'mk',d:'M'+(q.X-4)+' '+(y-4)+'l8 8m0-8l-8 8'},g);});
+    }else{
+      [-1,1].forEach(function(s){E('circle',{class:'brg',cx:q.X,cy:q.sy+s*10,r:3.4},g);});
+    }
+    E('title',null,g).textContent=q.id+' '+(q.type==='fest'?'Festrad':'Losrad')+' ('+q.t+' Zähne)';
+    P[q.id]=g;
+    // Schaltverzahnung
+    var hub=q.type==='los'?hubOf(q.id):(B.dogs[q.id]||null);
+    if(hub){
+      var h=B.H[hub], side=Math.sign(h.X-q.X), kx=q.X+side*(GW/2+3);
+      var k=E('g',{class:'part dog'+(q.type==='fest'?' fix':''),id:'p-k'+q.id},gP);
+      E('rect',{x:kx-3,y:q.sy-17,width:6,height:34,rx:1},k);
+      E('title',null,k).textContent='Schaltverzahnung';
+      P['k'+q.id]=k;
+    }
+  });
+  // Synchronkörper und Schaltmuffen
+  B.hubs.forEach(function(h){
+    var s=E('g',{class:'part syn',id:'p-h'+h.id},gP);
+    E('rect',{x:h.X-6,y:h.sy-14,width:12,height:28,rx:2},s);
+    E('title',null,s).textContent='Synchronkörper '+h.n;
+    var m=E('g',{class:'part muf',id:'p-m'+h.id},gP);
+    E('rect',{x:h.X-10,y:h.sy-25,width:20,height:50,rx:3},m);
+    E('line',{x1:h.X,y1:h.sy-25,x2:h.X,y2:h.sy-17},m);E('line',{x1:h.X,y1:h.sy+17,x2:h.X,y2:h.sy+25},m);
+    E('title',null,m).textContent='Schaltmuffe '+h.n;
+    P['h'+h.id]=s; P['m'+h.id]=m;
+  });
+  // Beschriftungen
+  B.shafts.forEach(function(s){
+    var y=s.y==='A'?B.YA:B.YB, t;
+    if(cur==='g'){
+      if(s.id==='in') t=lbl(X(s.x0)+16,y-12,'start',s.name);
+      else if(s.id==='out') t=lbl(X(s.x1),y-12,'end',s.name);
+      else t=lbl(X(s.x0)-12,y+5,'end',s.name);
+    }else t=lbl(X(s.x0)+16,y-12,'start',s.name);
+    t.classList.add('sh'); t.style.fill=SC[s.id]; reg(t,s.id,true);
+  });
+  B.ends.forEach(function(e){
+    var y=(e.y==='A'?B.YA:B.YB)+(e.dy||22), t=E('text',{class:'endtxt',x:B.X(e.x)+(e.a==='end'?0:16),y:y,'text-anchor':e.a},gL); t.textContent=e.t;
+  });
+  B.gears.forEach(function(q){
+    var up=q.sy===B.YA, t=lbl(q.X,up?q.sy-q.r-8:q.sy+q.r+18,'middle',q.id); t.classList.add('gl'); reg(t,q.id);
+  });
+  var tz=lbl(I.X+GW/2+6,I.cy+5,'start','Z12'); tz.classList.add('gl'); tz.style.textAnchor='start'; reg(tz,'Z12');
+  B.hubs.forEach(function(h){
+    var below=(cur==='u'&&h.sh==='out'), t=lbl(h.X,below?h.sy+42:h.sy-32,'middle',h.n); t.classList.add('gl','small'); reg(t,'m'+h.id);
+  });
+  // Drehrichtungs-Anzeiger
+  spinIn=spinner(X(-120)-14,B.YA,'Motor');
+  var so=cur==='g'?{x:X(345)+16,y:B.YA}:{x:X(-120)-14,y:B.YB};
+  spinOut=spinner(so.x,so.y,'Abtrieb');
+  // Kraftfluss
+  flowP=E('path',{id:'flowP',d:''},gF);
+  flowDot=E('circle',{id:'flowDot',r:6,cx:-50,cy:-50},gF);
+  function lbl(x,y,a,txt){var t=E('text',{class:'lbl',x:x,y:y,'text-anchor':a},gL);t.textContent=txt;return t;}
+  function reg(t,id,always){LB.push({el:t,id:id,always:!!always});}
+  function spinner(x,y,txt){
+    var g=E('g',{class:'spin'},gL); E('ellipse',{cx:x,cy:y,rx:6,ry:15},g); return g;
+  }
+}
+function hubOf(id){for(var g in B.gang){if(B.gang[g][0]===id)return B.gang[g][2];}return null;}
+
+/* ===== Kraftfluss ===== */
+function flowSteps(g){
+  var X=B.X,A=B.YA,Bv=B.YB,st=[],G=B.G,I=B.idler;
+  function add(n,ids,pts){st.push({n:n,ids:ids,pts:pts});}
+  var gi=B.gang[g], los=gi[0], fest=gi[1], h=B.H[gi[2]], xh=h.X, KN=h.n, nm=gn(g);
+  function kx(id){var q=G[id];return q.X+Math.sign(xh-q.X)*(GW/2+3);}
+  if(cur==='g'){
+    var lv=A-16;
+    add('Eingangswelle',['in'],[[X(-120),A],[X(0),A]]);
+    if(g===4){
+      add('Z1 Antriebsrad mit Schaltverzahnung',['Z1','kZ1'],[[X(0),lv],[kx('Z1'),lv]]);
+    }else{
+      var q=G[los];
+      add('Z1 Antriebsrad',['Z1'],[[X(0),A+34]]);
+      add('Z2 Festrad Antrieb',['Z2'],[[X(0),Bv]]);
+      add('Vorgelegewelle',['cs'],[[q.X,Bv]]);
+      if(g===6){
+        add('Z11 Festrad Rückwärtsgang',['Z11'],[[q.X,I.cy+12]]);
+        add('Z12 Rücklaufrad (kehrt die Drehrichtung um)',['Z12'],[[I.X,I.cy+12],[I.X,I.cy-12]]);
+        add('Z13 Losrad Rückwärtsgang',['Z13'],[[q.X,I.cy-12],[q.X,lv]]);
+      }else{
+        add(fest+' Festrad '+nm,[fest],[[q.X,Bv-G[fest].r+6]]);
+        add(los+' Losrad '+nm,[los],[[q.X,lv]]);
+      }
+      add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lv]]);
+    }
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh,lv]]);
+    add('Synchronkörper '+KN,['h'+gi[2]],[[xh,A]]);
+    add('Ausgangswelle',['out'],[[X(345),A]]);
+  }else if(h.sh==='out'){
+    var lw=Bv-16, qq=G[los];
+    add('Eingangswelle',['in'],[[X(-120),A],[qq.X,A]]);
+    if(g===6){
+      add('Z11 Festrad Rückwärtsgang',['Z11'],[[qq.X,I.cy-12]]);
+      add('Z12 Rücklaufrad (kehrt die Drehrichtung um)',['Z12'],[[I.X,I.cy-12],[I.X,I.cy+12]]);
+      add('Z13 Losrad Rückwärtsgang',['Z13'],[[qq.X,I.cy+12],[qq.X,lw]]);
+    }else{
+      add(fest+' Festrad '+nm,[fest],[[qq.X,A+G[fest].r-6]]);
+      add(los+' Losrad '+nm,[los],[[qq.X,lw]]);
+    }
+    add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lw]]);
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh,lw]]);
+    add('Synchronkörper '+KN,['h'+gi[2]],[[xh,Bv]]);
+    add('Ausgangswelle',['out'],[[X(-120),Bv]]);
+  }else{
+    var lu=A+16, qu=G[los];
+    add('Eingangswelle',['in'],[[X(-120),A],[xh,A]]);
+    add('Synchronkörper '+KN,['h'+gi[2]],[[xh,lu]]);
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh+Math.sign(qu.X-xh)*10,lu]]);
+    add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lu]]);
+    add(los+' Losrad '+nm,[los],[[qu.X,lu]]);
+    add(fest+' Festrad '+nm,[fest],[[qu.X,Bv]]);
+    add('Ausgangswelle',['out'],[[X(-120),Bv]]);
+  }
+  return st;
+}
+var FL={raf:0,st:null};
+function clearOn(){for(var k in P)P[k].classList.remove('on');}
+function drawFlow(g,anim,onStep){
+  cancelAnimationFrame(FL.raf); clearOn();
+  flowP.removeAttribute('marker-end');
+  if(!g){flowP.setAttribute('d','');flowDot.setAttribute('cx',-50);FL.st=null;return 0;}
+  var st=flowSteps(g), pts=[];
+  st.forEach(function(s){s.pts.forEach(function(p){pts.push(p);});s.end=pts.length;});
+  var cum=[0];for(var i=1;i<pts.length;i++)cum[i]=cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
+  st.forEach(function(s){s.L=cum[s.end-1];s.done=false;});
+  var total=cum[cum.length-1];
+  flowP.setAttribute('d','M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1);}).join(' L'));
+  FL.st=st;
+  var speed=300, dur=(anim&&!reduce)?total/speed*1000:0;
+  function at(L){
+    for(var j=1;j<pts.length;j++){if(cum[j]>=L){var seg=cum[j]-cum[j-1]||1,f=(L-cum[j-1])/seg;return[pts[j-1][0]+(pts[j][0]-pts[j-1][0])*f,pts[j-1][1]+(pts[j][1]-pts[j-1][1])*f];}}
+    return pts[pts.length-1];
+  }
+  function frame(L){
+    flowP.setAttribute('stroke-dasharray',L.toFixed(1)+' '+(total+20));
+    var p=at(L); flowDot.setAttribute('cx',p[0]);flowDot.setAttribute('cy',p[1]);
+    st.forEach(function(s,ix){if(!s.done&&s.L<=L+0.5){s.done=true;s.ids.forEach(function(id){if(P[id])P[id].classList.add('on');});if(onStep)onStep(ix);}});
+    if(L>=total){flowP.setAttribute('marker-end','url(#ah)');flowDot.setAttribute('cx',-50);}
+  }
+  if(!dur){frame(total);return 0;}
+  var t0=performance.now();
+  (function loop(now){var L=Math.min(total,(now-t0)/1000*speed);frame(L);if(L<total)FL.raf=requestAnimationFrame(loop);})(t0);
+  return dur;
+}
+function setMuffe(g){
+  B.hubs.forEach(function(h){P['m'+h.id].style.transform='';});
+  if(!g)return; var gi=B.gang[g]; P['m'+gi[2]].style.transform='translateX('+(gi[3]*9)+'px)';
+}
+function sameDir(g){return cur==='g'?g!==6:g===6;}
+function setSpin(g){
+  spinIn.classList.toggle('vis',!!g); spinOut.classList.toggle('vis',!!g);
+  if(g){spinIn.classList.remove('rev'); spinOut.classList.toggle('rev',!sameDir(g));}
+}
+function ratio(g){
+  var T=B.T;
+  if(cur==='g'){
+    if(g===4)return{i:1,f:'Direkter Gang: i = 1'};
+    if(g===6){var i6=T.Z2/T.Z1*T.Z12/T.Z11*T.Z13/T.Z12;return{i:i6,f:'i = (Z2/Z1) · (Z12/Z11) · (Z13/Z12) = ('+T.Z2+'/'+T.Z1+') · ('+T.Z12+'/'+T.Z11+') · ('+T.Z13+'/'+T.Z12+') = '+fmt(i6)};}
+    var gi=B.gang[g], a=gi[1], b=gi[0], ii=T.Z2/T.Z1*T[b]/T[a];
+    return{i:ii,f:'i = (Z2/Z1) · ('+b+'/'+a+') = ('+T.Z2+'/'+T.Z1+') · ('+T[b]+'/'+T[a]+') = '+fmt(ii)};
+  }
+  if(g===6){var r6=T.Z12/T.Z11*T.Z13/T.Z12;return{i:r6,f:'i = (Z12/Z11) · (Z13/Z12) = ('+T.Z12+'/'+T.Z11+') · ('+T.Z13+'/'+T.Z12+') = '+fmt(r6)};}
+  var p=B.gang[g], dr=+p[0].slice(1)%2?p[0]:p[1], dn=dr===p[0]?p[1]:p[0], r=T[dn]/T[dr];
+  return{i:r,f:'i = '+dn+'/'+dr+' = '+T[dn]+'/'+T[dr]+' = '+fmt(r)};
+}
+
+/* ===== Lernschritte ===== */
+var LEG='<div class="leg nosay">'+
+ '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--in)" stroke-width="5" stroke-linecap="round"/></svg>Welle</div>'+
+ '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--cs)" stroke-width="5"/><rect x="14" y="3" width="16" height="38" rx="2" fill="color-mix(in srgb,var(--cs) 26%,transparent)" stroke="var(--cs)" stroke-width="2"/><path d="M18 9l8 8m0-8l-8 8M18 27l8 8m0-8l-8 8" stroke="var(--ink)" stroke-width="2"/></svg>Festrad: fest auf der Welle (×)</div>'+
+ '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--out)" stroke-width="5"/><rect x="14" y="3" width="16" height="38" rx="2" fill="color-mix(in srgb,var(--loose) 24%,transparent)" stroke="var(--loose)" stroke-width="2"/><circle cx="22" cy="13" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="22" cy="31" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/></svg>Losrad: auf Nadellager (○)</div>'+
+ '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--out)" stroke-width="5"/><rect x="16" y="8" width="12" height="28" rx="2" fill="var(--sync)"/><rect x="12" y="2" width="20" height="40" rx="3" fill="var(--muffe)" opacity=".9"/></svg>Schaltmuffe auf dem Synchronkörper</div>'+
+ '</div>';
+function check(t,items,foot){return '<div class="box"><h3>'+t+'</h3><ul>'+items.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>'+(foot?'<p style="margin-top:6px;font-size:14px;color:var(--mut)">'+foot+'</p>':'')+'</div>';}
+function tbl(rows){return '<div class="tbl nosay"><table><thead><tr><th>Paar</th><th>treibend</th><th>getrieben</th><th>Zähne</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join('')+'</tbody></table></div>';}
+var ALLG={g:['Z1','Z2','Z3','Z4','Z5','Z6','Z7','Z8','Z9','Z10','Z11','Z12','Z13'],u:['Z1','Z2','Z3','Z4','Z5','Z6','Z7','Z8','Z9','Z10','Z11','Z12','Z13']};
+var FRAGEN='<ol><li><b>Wo kommt die Kraft herein?</b> Immer über die Eingangswelle.</li><li><b>Welche Schaltmuffe ist verschoben, und zu welchem Losrad?</b></li><li><b>Welches Rad treibt dieses Losrad an?</b> Folge dem Weg zurück bis zur Eingangswelle.</li><li><b>Schreibe den Weg auf:</b> von der Eingangswelle über alle Bauteile bis zur Ausgangswelle.</li></ol>';
+
+var STEPS={
+g:[
+ {k:'Start',t:'Was macht das Wechselgetriebe?',h:
+  '<p>Der Motor arbeitet nur in einem bestimmten Drehzahlbereich gut. Das Wechselgetriebe wandelt Drehzahl und Drehmoment so, dass das Fahrzeug anfahren, beschleunigen und sparsam schnell fahren kann. Außerdem macht es Leerlauf und Rückwärtsfahrt möglich.</p>'+
+  '<p>Links siehst du das <b>Getriebeschema</b> des gleichachsigen 5-Gang-Getriebes aus dem 3D-Modell. In dieser Einführung lernst du drei Dinge:</p>'+
+  '<ol><li>die <b>Bauart</b> erkennen,</li><li>die <b>Zahnräder</b> richtig benennen (Z1, Z2 …),</li><li>den <b>Kraftfluss</b> in jedem Gang bestimmen.</li></ol>'+
+  '<p>Klicke auf „Weiter“ oder starte die Einführung als Video.</p>',sc:{}},
+ {k:'Grundlagen',t:'Das Getriebeschema lesen',h:
+  '<p>Das Schema zeigt das Getriebe stark vereinfacht von der Seite. Waagerechte Linien sind <b>Wellen</b>, Rechtecke sind <b>Zahnräder</b>. Je höher das Rechteck, desto größer das Rad und desto mehr Zähne hat es.</p>'+LEG+
+  '<p>Ein <b>Festrad</b> ist fest mit seiner Welle verbunden und dreht immer mit ihr. Ein <b>Losrad</b> sitzt auf einem Nadellager und dreht sich frei auf der Welle. Erst die <b>Schaltmuffe</b> verbindet ein Losrad mit der Welle. Sie lässt sich auf dem Synchronkörper verschieben, der fest auf der Welle sitzt.</p>',
+  sc:{hi:['Z3','Z4','Z6','kZ4','kZ6','m12','h12','out','cs'],lbl:['Z3','Z4','Z6','m12']}},
+ {k:'Schritt 1 · Bauart',t:'Eingang und Ausgang verfolgen',h:
+  '<p>Suche zuerst die <b class="cin">Eingangswelle</b>. Sie kommt vom Motor über die Kupplung. Suche dann die <b class="cout">Ausgangswelle</b>, die zur Gelenkwelle führt.</p>'+
+  '<p>Hier liegen beide Wellen <b>auf einer gemeinsamen Achse</b>, sie fluchten. Das ist das wichtigste Merkmal des <b>gleichachsigen Getriebes</b>. Die beiden Wellen sind trotzdem zwei getrennte Bauteile: Die Eingangswelle endet kurz hinter Z1.</p>',
+  sc:{hi:['in','out'],ov:['axis']}},
+ {k:'Schritt 1 · Bauart',t:'Vorgelegewelle und Konstante',h:
+  '<p>Unter den beiden Wellen liegt die <b class="ccs">Vorgelegewelle</b>. Das gleichachsige Getriebe hat also <b>drei Wellen</b>.</p>'+
+  '<p>Z1 auf der Eingangswelle und Z2 auf der Vorgelegewelle sind ständig im Eingriff. Dieses Zahnradpaar heißt <b>Konstante</b>. Bei geschlossener Kupplung dreht die Vorgelegewelle deshalb immer mit, auch im Leerlauf.</p>',
+  sc:{hi:['in','cs','Z1','Z2'],lbl:['Z1','Z2']}},
+ {k:'Schritt 1 · Bauart',t:'Der direkte Gang',h:
+  '<p>Im <b>4. Gang</b> schiebt sich die Schaltmuffe 3./4. nach links auf die Schaltverzahnung von Z1. Eingangs- und Ausgangswelle sind dann direkt miteinander verbunden. Kein Zahnradpaar überträgt die Kraft, die Übersetzung ist <b>i = 1</b>.</p>'+
+  check('Checkliste gleichachsiges Getriebe',['Eingang und Ausgang auf einer Achse','drei Wellen, also mit Vorgelegewelle','Konstante Z1/Z2','direkter Gang mit i = 1'],'Typischer Einbau: längs, zum Beispiel bei Heckantrieb und Nutzfahrzeugen.'),
+  sc:{flow:4,lbl:['Z1','m34'],spin:true}},
+ {k:'Schritt 2 · Zahnräder',t:'Die Zählregel',h:
+  '<p>Die Zahnräder werden <b>in Richtung des Kraftflusses</b> nummeriert. Z1 ist das Antriebsrad auf der Eingangswelle.</p>'+
+  '<p>In jedem Zahnradpaar bekommt das <b>treibende</b> Rad die <b>ungerade</b> Nummer und das <b>getriebene</b> Rad die <b>gerade</b> Nummer. Gezählt wird Paar für Paar: erst die Konstante, dann der 1., 2., 3. und 5. Gang, zum Schluss der Rückwärtsgang.</p>'+
+  tbl([['Konstante','Z1','Z2','35 / 45'],['1. Gang','Z3','Z4','21 / 59'],['2. Gang','Z5','Z6','30 / 50'],['3. Gang','Z7','Z8','38 / 42'],['5. Gang','Z9','Z10','49 / 31'],['Rückwärts','Z11 → Z12','Z13','20 / 20 / 50']])+
+  '<p>Der 4. Gang hat kein eigenes Zahnradpaar, weil er direkt geschaltet wird.</p>',
+  sc:{num:true,lbl:'gears'}},
+ {k:'Schritt 2 · Zahnräder',t:'Festrad oder Losrad?',h:
+  '<p>Alle Räder auf der <span class="ccs">Vorgelegewelle</span> sind <b>Festräder</b>: Z2, Z3, Z5, Z7, Z9 und Z11. Die Räder auf der <span class="cout">Ausgangswelle</span> sind <b class="clo">Losräder</b>: Z4, Z6, Z8, Z10 und Z13.</p>'+
+  '<p><b>Erkennungstipp:</b> Ein Losrad steht immer direkt neben einer Schaltmuffe und hat auf dieser Seite eine Schaltverzahnung.</p>'+
+  '<p>Alle Räder sind ständig im Eingriff, darum drehen sich die Losräder immer mit. Kraft übertragen sie aber erst, wenn die Schaltmuffe sie mit der Welle verbindet.</p>',
+  sc:{hi:['Z4','Z6','Z8','Z10','Z13','kZ4','kZ6','kZ8','kZ10','kZ13','m34','m12','m5R','h34','h12','h5R','out'],lbl:['Z4','Z6','Z8','Z10','Z13','m34','m12','m5R']}},
+ {k:'Schritt 2 · Zahnräder',t:'Der Rückwärtsgang',h:
+  '<p>Für den Rückwärtsgang muss sich die Drehrichtung umkehren. Dafür sitzt zwischen Z11 und Z13 das <b>Rücklaufrad Z12</b> auf einer eigenen kurzen Welle. Im echten Getriebe liegt es hinter den beiden Rädern und greift in beide. Im Schema ist es deshalb gestrichelt und seitlich versetzt gezeichnet.</p>'+
+  '<p>Z12 ist ein Zwischenrad. Es ändert die Drehrichtung, aber nicht die Übersetzung. Achte auf die drehenden Markierungen links und rechts: Die Ausgangswelle dreht jetzt andersherum als der Motor.</p>',
+  sc:{flow:6,spin:true,lbl:['Z11','Z12','Z13','m5R']}},
+ {k:'Schritt 3 · Kraftfluss',t:'Den Kraftfluss in 4 Fragen finden',h:FRAGEN+
+  '<p>Beispiel <b>2. Gang</b>: Die Schaltmuffe 1./2. ist nach links zu Z6 geschoben. Z6 wird von Z5 angetrieben. Z5 sitzt auf der Vorgelegewelle, und die wird über Z2 von Z1 angetrieben.</p>'+
+  '<div data-slot="flow"></div>',
+  sc:{flow:2,lbl:['Z1','Z2','Z5','Z6','m12'],list:true,spin:true}},
+ {k:'Schritt 3 · Kraftfluss',t:'Selbst ausprobieren',stop:true,h:
+  '<p>Wähle einen Gang. Die rote Linie zeigt den Kraftfluss, die gelb markierten Bauteile sind beteiligt. Darunter stehen die Reihenfolge und die Übersetzung.</p><div data-slot="explore"></div>',
+  sc:{explore:true,lbl:'gears'}},
+ {k:'Abschluss',t:'Wissenscheck',stop:true,h:'<div data-slot="quiz"></div>',sc:{lbl:'gears'}}
+],
+u:[
+ {k:'Start',t:'Was macht das Wechselgetriebe?',h:
+  '<p>Der Motor arbeitet nur in einem bestimmten Drehzahlbereich gut. Das Wechselgetriebe wandelt Drehzahl und Drehmoment so, dass das Fahrzeug anfahren, beschleunigen und sparsam schnell fahren kann. Außerdem macht es Leerlauf und Rückwärtsfahrt möglich.</p>'+
+  '<p>Links siehst du das <b>Getriebeschema</b> des ungleichachsigen 5-Gang-Getriebes aus dem 3D-Modell. In dieser Einführung lernst du drei Dinge:</p>'+
+  '<ol><li>die <b>Bauart</b> erkennen,</li><li>die <b>Zahnräder</b> richtig benennen (Z1, Z2 …),</li><li>den <b>Kraftfluss</b> in jedem Gang bestimmen.</li></ol>'+
+  '<p>Klicke auf „Weiter“ oder starte die Einführung als Video.</p>',sc:{}},
+ {k:'Grundlagen',t:'Das Getriebeschema lesen',h:
+  '<p>Das Schema zeigt das Getriebe stark vereinfacht von der Seite. Waagerechte Linien sind <b>Wellen</b>, Rechtecke sind <b>Zahnräder</b>. Je höher das Rechteck, desto größer das Rad und desto mehr Zähne hat es.</p>'+LEG+
+  '<p>Ein <b>Festrad</b> ist fest mit seiner Welle verbunden und dreht immer mit ihr. Ein <b>Losrad</b> sitzt auf einem Nadellager und dreht sich frei auf der Welle. Erst die <b>Schaltmuffe</b> verbindet ein Losrad mit der Welle. Sie lässt sich auf dem Synchronkörper verschieben, der fest auf der Welle sitzt.</p>',
+  sc:{hi:['Z1','Z2','Z4','kZ2','kZ4','m12','h12','in','out'],lbl:['Z1','Z2','Z4','m12']}},
+ {k:'Schritt 1 · Bauart',t:'Eingang und Ausgang verfolgen',h:
+  '<p>Die <b class="cin">Eingangswelle</b> kommt vom Motor über die Kupplung. Die <b class="cout">Ausgangswelle</b> liegt <b>parallel darunter</b>, um den Achsabstand versetzt.</p>'+
+  '<p>Ein- und Ausgangswelle liegen also nicht auf einer Achse. Darum heißt diese Bauart <b>ungleichachsig</b> oder Zweiwellengetriebe. Antrieb und Abtrieb liegen auf derselben Seite: Die Ausgangswelle gibt die Kraft links an den Achsantrieb ab.</p>',
+  sc:{hi:['in','out'],ov:['cd']}},
+ {k:'Schritt 1 · Bauart',t:'Ein Zahnradpaar pro Gang',h:
+  '<p>Es gibt <b>keine Vorgelegewelle</b> und <b>keine Konstante</b>. In jedem Gang überträgt <b>genau ein Zahnradpaar</b> die Kraft von der Eingangs- auf die Ausgangswelle.</p>'+
+  '<p>Im 4. Gang laufen Z7 und Z8 mit je 40 Zähnen, also mit i = 1. Trotzdem gibt es <b>keinen direkten Gang</b>: Die Kraft geht immer über Zahnräder.</p>'+
+  check('Checkliste ungleichachsiges Getriebe',['Eingang und Ausgang parallel versetzt','nur zwei Wellen','keine Konstante, kein direkter Gang','ein Zahnradpaar pro Gang','Schaltmuffen auf beiden Wellen'],'Typischer Einbau: quer, bei Frontantrieb.'),
+  sc:{flow:4,lbl:['Z7','Z8','m34'],spin:true}},
+ {k:'Schritt 2 · Zahnräder',t:'Die Zählregel',h:
+  '<p>Die Zahnräder werden <b>in Richtung des Kraftflusses</b> nummeriert. In jedem Paar bekommt das <b>treibende</b> Rad die <b>ungerade</b> und das <b>getriebene</b> Rad die <b>gerade</b> Nummer.</p>'+
+  '<p>Die Eingangswelle treibt immer. Darum stehen hier alle <b>ungeraden Nummern oben</b> auf der Eingangswelle und alle <b>geraden Nummern unten</b> auf der Ausgangswelle. Gezählt wird nach Gängen: 1., 2., 3., 4., 5. Gang, zum Schluss der Rückwärtsgang.</p>'+
+  tbl([['1. Gang','Z1','Z2','17 / 63'],['2. Gang','Z3','Z4','26 / 54'],['3. Gang','Z5','Z6','34 / 46'],['4. Gang','Z7','Z8','40 / 40'],['5. Gang','Z9','Z10','46 / 34'],['Rückwärts','Z11 → Z12','Z13','18 / 18 / 54']]),
+  sc:{num:true,lbl:'gears'}},
+ {k:'Schritt 2 · Zahnräder',t:'Festrad oder Losrad?',h:
+  '<p>Die Schaltmuffen sitzen hier auf <b>beiden Wellen</b>: 1./2. und 5./R auf der Ausgangswelle, 3./4. auf der Eingangswelle. Darum gibt es Losräder oben und unten.</p>'+
+  '<p><b class="clo">Losräder</b> sind Z2, Z4, Z10 und Z13 auf der Ausgangswelle sowie Z5 und Z7 auf der Eingangswelle. Alle anderen Räder sind <b>Festräder</b>.</p>'+
+  '<p><b>Erkennungstipp:</b> Ein Losrad steht immer direkt neben einer Schaltmuffe und hat auf dieser Seite eine Schaltverzahnung. Sein Partnerrad auf der anderen Welle ist ein Festrad.</p>',
+  sc:{hi:['Z2','Z4','Z10','Z13','Z5','Z7','kZ2','kZ4','kZ10','kZ13','kZ5','kZ7','m12','m34','m5R','h12','h34','h5R','in','out'],lbl:['Z2','Z4','Z10','Z13','Z5','Z7','m12','m34','m5R']}},
+ {k:'Schritt 2 · Zahnräder',t:'Der Rückwärtsgang',h:
+  '<p>Im Rückwärtsgang treibt das Festrad <b>Z11</b> auf der Eingangswelle das <b>Rücklaufrad Z12</b> an, und Z12 treibt das Losrad <b>Z13</b> auf der Ausgangswelle. Z12 liegt im echten Getriebe hinter Z11 und Z13. Im Schema ist es deshalb gestrichelt und seitlich versetzt gezeichnet.</p>'+
+  '<p>In den Vorwärtsgängen kämmt nur ein Radpaar, darum dreht die Ausgangswelle <b>entgegen</b> der Eingangswelle. Mit Z12 kommt ein Rad dazu, und die Drehrichtung kehrt sich um. Vergleiche die drehenden Markierungen links.</p>',
+  sc:{flow:6,spin:true,lbl:['Z11','Z12','Z13','m5R']}},
+ {k:'Schritt 3 · Kraftfluss',t:'Den Kraftfluss in 4 Fragen finden',h:FRAGEN+
+  '<p>Beispiel <b>3. Gang</b>: Die Schaltmuffe 3./4. auf der Eingangswelle ist nach links zu Z5 geschoben. Hier liegt die Muffe auf der <b>treibenden</b> Seite. Die Kraft geht deshalb erst über Synchronkörper und Schaltmuffe ins Losrad Z5 und dann ins Festrad Z6 auf der Ausgangswelle.</p>'+
+  '<p>Bei den Gängen 1, 2, 5 und R ist es umgekehrt: erst das Festrad oben, dann das Losrad unten, dann die Schaltmuffe.</p>'+
+  '<div data-slot="flow"></div>',
+  sc:{flow:3,lbl:['Z5','Z6','m34'],list:true,spin:true}},
+ {k:'Schritt 3 · Kraftfluss',t:'Selbst ausprobieren',stop:true,h:
+  '<p>Wähle einen Gang. Die rote Linie zeigt den Kraftfluss, die gelb markierten Bauteile sind beteiligt. Darunter stehen die Reihenfolge und die Übersetzung.</p><div data-slot="explore"></div>',
+  sc:{explore:true,lbl:'gears'}},
+ {k:'Abschluss',t:'Wissenscheck',stop:true,h:'<div data-slot="quiz"></div>',sc:{lbl:'gears'}}
+]};
+
+var QUIZ={
+ g:[
+  {q:'Woran erkennst du das gleichachsige Getriebe sofort?',o:['Eingangs- und Ausgangswelle liegen auf einer Achse.','Es hat nur zwei Wellen.','Alle Zahnräder sind Losräder.'],a:0,w:'Eingang und Ausgang fluchten. Dazu kommen Vorgelegewelle, Konstante und direkter Gang.'},
+  {q:'Welches Zahnrad treibt Z6 an?',o:['Z2','Z5','Z7'],a:1,w:'Z5 und Z6 bilden das Paar des 2. Gangs. Ungerade treibt, gerade wird getrieben.'},
+  {q:'1. Gang: Welches Bauteil folgt direkt auf die Vorgelegewelle?',o:['Z4 Losrad','Schaltmuffe 1./2.','Z3 Festrad'],a:2,w:'Vorgelegewelle → Z3 Festrad → Z4 Losrad → Schaltverzahnung → Schaltmuffe 1./2. → Synchronkörper → Ausgangswelle.'},
+  {q:'Warum hat der 4. Gang die Übersetzung i = 1?',o:['Die Schaltmuffe verbindet Eingangs- und Ausgangswelle direkt.','Z7 und Z8 sind gleich groß.','Die Vorgelegewelle steht still.'],a:0,w:'Im direkten Gang ist kein Zahnradpaar am Kraftfluss beteiligt. Die Vorgelegewelle dreht trotzdem mit, weil die Konstante immer im Eingriff ist.'}
+ ],
+ u:[
+  {q:'Woran erkennst du das ungleichachsige Getriebe?',o:['Es hat eine Konstante Z1/Z2.','Eingangs- und Ausgangswelle liegen parallel versetzt.','Es hat einen direkten Gang.'],a:1,w:'Die beiden Wellen liegen um den Achsabstand versetzt. Es gibt keine Vorgelegewelle und keine Konstante.'},
+  {q:'Auf welcher Welle sitzt das Losrad des 3. Gangs?',o:['Auf der Eingangswelle (Z5)','Auf der Ausgangswelle (Z6)','Auf der Vorgelegewelle'],a:0,w:'Die Schaltmuffe 3./4. sitzt auf der Eingangswelle, also sind Z5 und Z7 dort Losräder.'},
+  {q:'Wie viele Zahnradpaare übertragen die Kraft im 2. Gang?',o:['eins','zwei','drei'],a:0,w:'Beim ungleichachsigen Getriebe überträgt in jedem Vorwärtsgang genau ein Paar die Kraft: im 2. Gang Z3 und Z4.'},
+  {q:'Welches Rad kehrt im Rückwärtsgang die Drehrichtung um?',o:['Z11 Festrad','Z13 Losrad','Z12 Rücklaufrad'],a:2,w:'Z12 sitzt als Zwischenrad zwischen Z11 und Z13.'}
+ ]
+};
+
+/* ===== Anzeige ===== */
+var idx=0, seen={g:{},u:{}};
+function applyScene(sc){
+  sc=sc||{};
+  sv.classList.toggle('dim',!!sc.hi);
+  for(var id in P)P[id].classList.toggle('hi',!!sc.hi&&sc.hi.indexOf(id)>=0);
+  LB.forEach(function(l){
+    var vis=l.always||sc.lbl==='gears'||(Array.isArray(sc.lbl)&&sc.lbl.indexOf(l.id)>=0);
+    l.el.classList.toggle('vis',vis);
+    l.el.classList.remove('pop'); if(P[l.id])P[l.id].classList.remove('pop');
+    if(l.always&&sc.hi)l.el.style.opacity=sc.hi.indexOf(l.id)>=0?'':'.25'; else l.el.style.opacity='';
+  });
+  if(sc.num&&!reduce){
+    void sv.getBoundingClientRect();
+    LB.forEach(function(l){
+      if(/^Z\d+$/.test(l.id)){var n=+l.id.slice(1),d=(n-1)*0.42+'s';l.el.style.setProperty('--d',d);l.el.classList.add('pop');if(P[l.id]){P[l.id].style.setProperty('--d',d);P[l.id].classList.add('pop');}}
+    });
+  }
+  ['axis','cd'].forEach(function(o){var e=$('ov-'+o);if(e)e.classList.toggle('vis',!!sc.ov&&sc.ov.indexOf(o)>=0);});
+  setMuffe(sc.flow||0); setSpin(sc.spin?sc.flow:0);
+  $('cap').textContent=sc.spin&&sc.flow?dirText(sc.flow):'';
+  return sc.flow?drawFlow(sc.flow,true,listStep):(drawFlow(0),0);
+}
+function dirText(g){return 'Drehrichtung: Die Ausgangswelle dreht im '+gn(g)+' '+(sameDir(g)?'in dieselbe Richtung wie':'entgegen')+' der Eingangswelle.';}
+var curList=null;
+function listStep(i){if(curList&&curList.children[i])curList.children[i].classList.add('on');}
+function flowListHtml(g){return '<ol class="fl">'+flowSteps(g).map(function(s){return '<li>'+s.n+'</li>';}).join('')+'</ol>';}
+
+function renderKeys(){
+  var k=[['var(--in)','Eingangswelle'],['var(--out)','Ausgangswelle']];
+  if(cur==='g')k.push(['var(--cs)','Vorgelegewelle']);
+  k.push(['var(--loose)','Losrad'],['var(--sync)','Synchronkörper'],['var(--muffe)','Schaltmuffe'],['var(--flow)','Kraftfluss']);
+  $('keys').innerHTML=k.map(function(a){return '<span><i style="background:'+a[0]+'"></i>'+a[1]+'</span>';}).join('');
+}
+function renderRail(){
+  var S=STEPS[cur];
+  $('rail').innerHTML=S.map(function(s,i){return '<button type="button" class="chip'+(i===idx?' cur':'')+(seen[cur][i]?' seen':'')+'" data-i="'+i+'"'+(i===idx?' aria-current="step"':'')+'><b>'+(i+1)+'</b>'+s.t+'</button>';}).join('');
+  var c=$('rail').querySelector('.cur'); if(c&&c.scrollIntoView)try{c.scrollIntoView({block:'nearest',inline:'center'});}catch(x){}
+}
+var lastDur=0;
+function show(i){
+  var S=STEPS[cur]; idx=Math.max(0,Math.min(S.length-1,i)); seen[cur][idx]=1;
+  var s=S[idx];
+  stopSpeech();
+  $('kick').textContent=s.k; $('st').textContent=s.t; $('sb').innerHTML=s.h;
+  $('cnt').textContent='Schritt '+(idx+1)+' von '+S.length;
+  $('prev').disabled=idx===0; $('next').textContent=idx===S.length-1?(cur==='g'?'Zur ungleichachsigen Bauart →':'Zur gleichachsigen Bauart →'):'Weiter →';
+  renderRail();
+  curList=null;
+  var fs=$('sb').querySelector('[data-slot="flow"]');
+  if(fs){fs.innerHTML='<div class="box nosay"><h3>Kraftfluss im '+gn(s.sc.flow)+'</h3>'+flowListHtml(s.sc.flow)+'<div class="row" style="margin-top:8px"><button class="btn" type="button" id="replay">↻ Nochmal abspielen</button></div></div>';curList=fs.querySelector('.fl');
+    $('replay').onclick=function(){Array.prototype.forEach.call(curList.children,function(li){li.classList.remove('on');});drawFlow(s.sc.flow,true,listStep);};}
+  var ex=$('sb').querySelector('[data-slot="explore"]');
+  if(ex)explore(ex);
+  var qz=$('sb').querySelector('[data-slot="quiz"]');
+  if(qz)quiz(qz);
+  if(!ex)lastDur=applyScene(s.sc); else lastDur=0;
+  try{if(location.hash.slice(1)!==BAU[cur].key)history.replaceState(null,'','#'+BAU[cur].key);}catch(x){}
+  if(playing)schedule();
+}
+function explore(box){
+  box.innerHTML='<div class="gears" role="group" aria-label="Gang wählen">'+[0,1,2,3,4,5,6].map(function(g){return '<button type="button" data-g="'+g+'">'+(g===0?'N':g===6?'R':g)+'</button>';}).join('')+'</div><div id="exOut" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>';
+  box.querySelectorAll('.gears button').forEach(function(b){b.onclick=function(){pick(+b.dataset.g);};});
+  function pick(g){
+    box.querySelectorAll('.gears button').forEach(function(b){b.classList.toggle('sel',+b.dataset.g===g);});
+    var out=$('exOut');
+    applyScene({lbl:'gears'});
+    if(!g){drawFlow(0);setMuffe(0);setSpin(0);$('cap').textContent='';out.innerHTML='<p><b>Leerlauf (N):</b> Alle Schaltmuffen stehen in der Mitte. Kein Losrad ist mit seiner Welle verbunden, also wird keine Kraft zur Ausgangswelle übertragen.'+(cur==='g'?' Über die Konstante dreht die Vorgelegewelle trotzdem mit.':'')+'</p>';return;}
+    var r=ratio(g);
+    out.innerHTML='<div class="box"><h3>Kraftfluss im '+gn(g)+'</h3>'+flowListHtml(g)+'</div>'+
+      '<div class="box ratio"><h3>Übersetzung</h3><p>'+r.f+'</p><p style="margin-top:4px">Bei 3000 min⁻¹ am Eingang dreht die Ausgangswelle mit <b>'+Math.round(3000/r.i/10)*10+' min⁻¹</b>'+(r.i>1?' (langsamer, mehr Drehmoment).':r.i<1?' (schneller, weniger Drehmoment).':' (gleich schnell).')+'</p></div>';
+    curList=out.querySelector('.fl');
+    setMuffe(g); setSpin(g); $('cap').textContent=dirText(g);
+    drawFlow(g,true,listStep);
+  }
+  pick(1);
+}
+function quiz(box){
+  var Q=QUIZ[cur], got=0, done=0;
+  box.innerHTML='<p>Beantworte die Fragen. Du siehst sofort, ob es stimmt.</p>'+Q.map(function(q,i){return '<div class="q" data-i="'+i+'"><b>'+(i+1)+'. '+q.q+'</b><div class="opts">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><div class="fb"></div></div>';}).join('')+
+    '<p class="score" id="score"></p><div class="row"><button class="btn pri" type="button" id="go3d">3D-Modell öffnen</button><button class="btn" type="button" id="goEx">Übungsaufgaben</button><button class="btn" type="button" id="again">Fragen zurücksetzen</button></div>';
+  box.querySelectorAll('.q').forEach(function(d){
+    var q=Q[+d.dataset.i];
+    d.querySelectorAll('button').forEach(function(b){b.onclick=function(){
+      if(d.dataset.done)return; d.dataset.done=1; done++;
+      var j=+b.dataset.j, ok=j===q.a; if(ok)got++;
+      b.classList.add(ok?'right':'wrong'); if(!ok)d.querySelectorAll('button')[q.a].classList.add('right');
+      d.querySelector('.fb').textContent=(ok?'Richtig. ':'Nicht ganz. ')+q.w;
+      $('score').textContent=done===Q.length?'Ergebnis: '+got+' von '+Q.length+' richtig.'+(got===Q.length?' Sehr gut!':' Schau dir die Schritte zu den falschen Fragen noch einmal an.'):'';
+    };});
+  });
+  $('go3d').onclick=function(){openPage(BAU[cur].key);};
+  $('goEx').onclick=function(){openPage(BAU[cur].uebung);};
+  $('again').onclick=function(){quiz(box);};
+}
+function openPage(k){
+  if(window.__emb&&parent!==window){try{parent.postMessage({gbOpen:k},'*');return;}catch(x){}}
+  if(window.__wr){location.reload();return;}
+  location.href=k+'.html';
+}
+function setBau(b,step){
+  if(b!==cur||!sv.firstChild){cur=b;build();renderKeys();}
+  ['g','u'].forEach(function(k){$('tab-'+k).setAttribute('aria-selected',k===cur?'true':'false');});
+  show(step||0);
+}
+
+/* ===== Video-Modus ===== */
+var playing=false, tmr=0, utt=null;
+var synth=null; try{synth=window.speechSynthesis||null;}catch(x){}
+if(!synth||typeof SpeechSynthesisUtterance==='undefined'){$('voice').parentNode.hidden=true;}
+function sayText(){
+  var c=$('sb').cloneNode(true); c.querySelectorAll('.nosay,[data-slot]').forEach(function(n){n.remove();});
+  return ($('st').textContent+'. '+c.textContent).replace(/\s+/g,' ').replace(/Z(\d+)/g,'Z $1').replace(/i = /g,'i gleich ').replace(/(\d)\.\/(\d)\./g,'$1 und $2');
+}
+function stopSpeech(){try{if(synth)synth.cancel();}catch(x){} utt=null;}
+function bar(ms){var b=$('pbar');b.style.transition='none';b.style.width='0';if(!ms)return;void b.offsetWidth;b.style.transition='width '+ms+'ms linear';b.style.width='100%';}
+function schedule(){
+  clearTimeout(tmr);
+  var s=STEPS[cur][idx];
+  if(s.stop){bar(0);setPlaying(false);return;}
+  var txt=sayText(), min=Math.max(lastDur+1800,7000), est=Math.max(min,txt.length*62);
+  var fin=function(){if(!playing)return;tmr=setTimeout(function(){if(playing)show(idx+1);},1000);};
+  if($('voice').checked&&synth){
+    bar(Math.round(txt.length*75));
+    try{
+      utt=new SpeechSynthesisUtterance(txt); utt.lang='de-DE'; utt.rate=1;
+      var v=(synth.getVoices()||[]).filter(function(v){return /^de/i.test(v.lang);})[0]; if(v)utt.voice=v;
+      var me=utt, t0=Date.now(), safety=setTimeout(function(){if(utt===me){utt=null;fin();}},txt.length*110+4000);
+      utt.onend=utt.onerror=function(){if(utt!==me)return;clearTimeout(safety);utt=null;var rest=min-(Date.now()-t0);tmr=setTimeout(fin,Math.max(0,rest-1000));};
+      synth.speak(utt);
+    }catch(x){bar(est);tmr=setTimeout(fin,est);}
+  }else{bar(est);tmr=setTimeout(fin,est);}
+}
+function setPlaying(p){
+  playing=p; $('play').setAttribute('aria-pressed',p?'true':'false'); $('play').textContent=p?'❚❚ Pause':'▶ Als Video abspielen';
+  if(!p){clearTimeout(tmr);stopSpeech();bar(0);}
+}
+$('play').onclick=function(){
+  if(playing){setPlaying(false);return;}
+  setPlaying(true);
+  if(STEPS[cur][idx].stop)show(0); else show(idx);
+};
+$('voice').onchange=function(){if(playing)schedule();};
+$('prev').onclick=function(){show(idx-1);};
+$('next').onclick=function(){if(idx===STEPS[cur].length-1){setPlaying(false);setBau(cur==='g'?'u':'g',0);}else show(idx+1);};
+$('rail').onclick=function(e){var b=e.target.closest('.chip');if(b)show(+b.dataset.i);};
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){setPlaying(false);setBau(b.dataset.b,0);};});
+document.addEventListener('keydown',function(e){
+  if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==='ArrowRight'){show(idx+1);} else if(e.key==='ArrowLeft'){show(idx-1);}
+});
+$('back').onclick=function(){
+  setPlaying(false);
+  if(window.__wr)location.reload();
+  else if(window.__emb&&parent!==window){try{parent.postMessage('gb-back','*');}catch(x){}}
+  else location.href='index.html';
+};
+var start=(window.__sel||location.hash.slice(1)||'').toLowerCase();
+setBau(start==='ungleichachsig'?'u':'g',0);
+try{if(window.__emb&&parent!==window)parent.postMessage('gb-ready','*');}catch(x){}
+})();
+</script>
+</body>
+</html>
