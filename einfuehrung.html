@@ -153,6 +153,9 @@ svg.dim .lbl.gl:not(.vis),svg .lbl.gl:not(.vis){opacity:0}
 .gear .brg{fill:var(--card);stroke:var(--ink);stroke-width:1.6}
 .dog rect{fill:var(--loose)}
 .dog.fix rect{fill:var(--in)}
+.dog rect.mantel{fill:color-mix(in srgb,var(--loose) 55%,var(--card))}
+.dog.fix rect.mantel{fill:color-mix(in srgb,var(--in) 55%,var(--card))}
+.ring rect{fill:#f2b705;stroke:#a77d00;stroke-width:1}
 .syn rect{fill:var(--sync)}
 .muf{transition:transform .6s cubic-bezier(.3,.7,.3,1)}
 .muf rect{fill:var(--muffe)}
@@ -219,7 +222,10 @@ svg.dim .lbl.gl:not(.vis),svg .lbl.gl:not(.vis){opacity:0}
 var $=function(id){return document.getElementById(id);};
 var NS='http://www.w3.org/2000/svg';
 function E(t,a,p){var e=document.createElementNS(NS,t);if(a)for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
-var RPX=1.75, GW=24;                 // 1 Zahn = 1,75 px Radius (Modul 2,5 mm, Maßstab 1,4 px/mm); Radbreite im Schema
+var RPX=1.75, GW=24;
+// Synchronisierung im Schema (px ab Nabenmitte): Synchronkörper und Muffe ±11, Synchronring 12–17, Schaltverzahnung 18–25.
+// Eingelegt fährt die Muffe 15 px: Sie überdeckt die Schaltverzahnung und sitzt noch auf dem Synchronkörper.
+var SY={hw:11,r0:12,r1:17,k0:18,k1:25,ms:15};                 // 1 Zahn = 1,75 px Radius (Modul 2,5 mm, Maßstab 1,4 px/mm); Radbreite im Schema
 var reduce=false; try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(x){}
 var fmt=function(v,d){return v.toFixed(d===undefined?2:d).replace('.',',');};
 var gn=function(g){return g===6?'Rückwärtsgang':g+'. Gang';};
@@ -259,11 +265,7 @@ var BAU={
   B.gears=B.gears.map(function(a){var q={id:a[0],t:a[1],x:a[2],sh:a[3],type:a[4]};q.X=B.X(q.x);q.sy=B.sy(q.sh);q.r=q.t*RPX;B.G[q.id]=q;B.T[q.id]=q.t;return q;});
   var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
   I.X=B.X(I.x)+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
-  B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);h.hw=14;B.H[h.id]=h;});
-  // Muffenbreite und Schaltweg: eingelegt überdeckt die Muffe die Schaltverzahnung und sitzt noch auf dem Synchronkörper
-  B.MS={}; var gk;
-  for(gk in B.gang){var gi=B.gang[gk],q=B.G[gi[0]],h=B.H[gi[2]],kx=q.X+Math.sign(h.X-q.X)*(GW/2+3);gi.dist=Math.abs(kx-h.X);h.hw=Math.max(h.hw,Math.ceil((gi.dist-2)/2)+2);}
-  for(gk in B.gang){var gj=B.gang[gk];B.MS[gk]=gj.dist+4-B.H[gj[2]].hw;}
+  B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);B.H[h.id]=h;});
 });
 
 /* ===== Schema zeichnen ===== */
@@ -314,9 +316,13 @@ function build(){
     // Schaltverzahnung
     var hub=q.type==='los'?hubOf(q.id):(B.dogs[q.id]||null);
     if(hub){
-      var h=B.H[hub], side=Math.sign(h.X-q.X), kx=q.X+side*(GW/2+3);
+      var h=B.H[hub], side=Math.sign(h.X-q.X), ka=h.X-side*SY.k1, kb=h.X-side*SY.k0, ge=q.X+side*GW/2;
       var k=E('g',{class:'part dog'+(q.type==='fest'?' fix':''),id:'p-k'+q.id},gP);
-      E('rect',{x:kx-3,y:q.sy-17,width:6,height:34,rx:1},k);
+      E('rect',{class:'mantel',x:Math.min(ge,ka),y:q.sy-7,width:Math.abs(ka-ge),height:14},k);
+      E('rect',{x:Math.min(ka,kb),y:q.sy-14,width:SY.k1-SY.k0,height:28,rx:1},k);
+      var rg=E('g',{class:'part ring'},gP);
+      E('rect',{x:Math.min(h.X-side*SY.r0,h.X-side*SY.r1),y:q.sy-13,width:SY.r1-SY.r0,height:26,rx:1},rg);
+      E('title',null,rg).textContent='Synchronring';
       E('title',null,k).textContent='Schaltverzahnung';
       P['k'+q.id]=k;
     }
@@ -324,11 +330,10 @@ function build(){
   // Synchronkörper und Schaltmuffen
   B.hubs.forEach(function(h){
     var s=E('g',{class:'part syn',id:'p-h'+h.id},gP);
-    E('rect',{x:h.X-6,y:h.sy-14,width:12,height:28,rx:2},s);
+    E('rect',{x:h.X-SY.hw,y:h.sy-14,width:2*SY.hw,height:28,rx:2},s);
     E('title',null,s).textContent='Synchronkörper '+h.n;
     var m=E('g',{class:'part muf',id:'p-m'+h.id},gP);
-    E('rect',{x:h.X-h.hw,y:h.sy-25,width:2*h.hw,height:50,rx:3},m);
-    E('line',{x1:h.X,y1:h.sy-25,x2:h.X,y2:h.sy-17},m);E('line',{x1:h.X,y1:h.sy+17,x2:h.X,y2:h.sy+25},m);
+    [-1,1].forEach(function(d){var y0=d<0?h.sy-28:h.sy+15;E('rect',{x:h.X-SY.hw,y:y0,width:2*SY.hw,height:13,rx:2},m);E('line',{x1:h.X,y1:d<0?h.sy-28:h.sy+28,x2:h.X,y2:d<0?h.sy-22:h.sy+22},m);});
     E('title',null,m).textContent='Schaltmuffe '+h.n;
     P['h'+h.id]=s; P['m'+h.id]=m;
   });
@@ -371,8 +376,8 @@ function hubOf(id){for(var g in B.gang){if(B.gang[g][0]===id)return B.gang[g][2]
 function flowSteps(g){
   var X=B.X,A=B.YA,Bv=B.YB,st=[],G=B.G,I=B.idler;
   function add(n,ids,pts){st.push({n:n,ids:ids,pts:pts});}
-  var gi=B.gang[g], los=gi[0], fest=gi[1], h=B.H[gi[2]], xh=h.X, xm=xh+gi[3]*B.MS[g], KN=h.n, nm=gn(g);
-  function kx(id){var q=G[id];return q.X+Math.sign(xh-q.X)*(GW/2+3);}
+  var gi=B.gang[g], los=gi[0], fest=gi[1], h=B.H[gi[2]], xh=h.X, xm=xh+gi[3]*SY.ms, KN=h.n, nm=gn(g);
+  function kx(id){var q=G[id];return xh-Math.sign(xh-q.X)*(SY.k0+SY.k1)/2;}
   if(cur==='g'){
     var lv=A-16;
     add('Eingangswelle',['in'],[[X(-120),A],[X(0),A]]);
@@ -454,7 +459,7 @@ function drawFlow(g,anim,onStep){
 }
 function setMuffe(g){
   B.hubs.forEach(function(h){P['m'+h.id].style.transform='';});
-  if(!g)return; var gi=B.gang[g]; P['m'+gi[2]].style.transform='translateX('+(gi[3]*B.MS[g])+'px)';
+  if(!g)return; var gi=B.gang[g]; P['m'+gi[2]].style.transform='translateX('+(gi[3]*SY.ms)+'px)';
 }
 function sameDir(g){return cur==='g'?g!==6:g===6;}
 function setSpin(g){
@@ -479,7 +484,7 @@ var LEG='<div class="leg nosay">'+
  '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--in)" stroke-width="5" stroke-linecap="round"/></svg>Welle</div>'+
  '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--cs)" stroke-width="5"/><rect x="14" y="3" width="16" height="38" rx="2" fill="color-mix(in srgb,var(--cs) 26%,transparent)" stroke="var(--cs)" stroke-width="2"/><path d="M18 9l8 8m0-8l-8 8M18 27l8 8m0-8l-8 8" stroke="var(--ink)" stroke-width="2"/></svg>Festrad: fest auf der Welle (×)</div>'+
  '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--out)" stroke-width="5"/><rect x="14" y="3" width="16" height="38" rx="2" fill="color-mix(in srgb,var(--loose) 24%,transparent)" stroke="var(--loose)" stroke-width="2"/><circle cx="22" cy="13" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/><circle cx="22" cy="31" r="3.4" fill="var(--card)" stroke="var(--ink)" stroke-width="1.6"/></svg>Losrad: auf Nadellager (○)</div>'+
- '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--out)" stroke-width="5"/><rect x="16" y="8" width="12" height="28" rx="2" fill="var(--sync)"/><rect x="12" y="2" width="20" height="40" rx="3" fill="var(--muffe)" opacity=".9"/></svg>Schaltmuffe auf dem Synchronkörper</div>'+
+ '<div><svg viewBox="0 0 44 44"><line x1="2" y1="22" x2="42" y2="22" stroke="var(--out)" stroke-width="5"/><rect x="16" y="8" width="12" height="28" rx="2" fill="var(--sync)"/><rect x="16" y="1" width="12" height="8" rx="2" fill="var(--muffe)"/><rect x="16" y="35" width="12" height="8" rx="2" fill="var(--muffe)"/></svg>Schaltmuffe auf dem Synchronkörper</div>'+
  '</div>';
 function check(t,items,foot){return '<div class="box"><h3>'+t+'</h3><ul>'+items.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ul>'+(foot?'<p style="margin-top:6px;font-size:14px;color:var(--mut)">'+foot+'</p>':'')+'</div>';}
 function tbl(rows){return '<div class="tbl nosay"><table><thead><tr><th>Paar</th><th>treibend</th><th>getrieben</th><th>Zähne</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join('')+'</tbody></table></div>';}
@@ -817,7 +822,7 @@ function flowListHtml(g){return '<ol class="fl">'+flowSteps(g).map(function(s){r
 function renderKeys(){
   var k=[['var(--in)','Eingangswelle'],['var(--out)','Ausgangswelle']];
   if(cur==='g')k.push(['var(--cs)','Vorgelegewelle']);
-  k.push(['var(--loose)','Losrad'],['var(--sync)','Synchronkörper'],['var(--muffe)','Schaltmuffe'],['var(--flow)','Kraftfluss']);
+  k.push(['var(--loose)','Losrad'],['#f2b705','Synchronring'],['var(--sync)','Synchronkörper'],['var(--muffe)','Schaltmuffe'],['var(--flow)','Kraftfluss']);
   $('keys').innerHTML=k.map(function(a){return '<span><i style="background:'+a[0]+'"></i>'+a[1]+'</span>';}).join('');
 }
 function renderRail(){
