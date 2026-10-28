@@ -259,7 +259,11 @@ var BAU={
   B.gears=B.gears.map(function(a){var q={id:a[0],t:a[1],x:a[2],sh:a[3],type:a[4]};q.X=B.X(q.x);q.sy=B.sy(q.sh);q.r=q.t*RPX;B.G[q.id]=q;B.T[q.id]=q.t;return q;});
   var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
   I.X=B.X(I.x)+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
-  B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);B.H[h.id]=h;});
+  B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);h.hw=14;B.H[h.id]=h;});
+  // Muffenbreite und Schaltweg: eingelegt überdeckt die Muffe die Schaltverzahnung und sitzt noch auf dem Synchronkörper
+  B.MS={}; var gk;
+  for(gk in B.gang){var gi=B.gang[gk],q=B.G[gi[0]],h=B.H[gi[2]],kx=q.X+Math.sign(h.X-q.X)*(GW/2+3);gi.dist=Math.abs(kx-h.X);h.hw=Math.max(h.hw,Math.ceil((gi.dist-2)/2)+2);}
+  for(gk in B.gang){var gj=B.gang[gk];B.MS[gk]=gj.dist+4-B.H[gj[2]].hw;}
 });
 
 /* ===== Schema zeichnen ===== */
@@ -323,7 +327,7 @@ function build(){
     E('rect',{x:h.X-6,y:h.sy-14,width:12,height:28,rx:2},s);
     E('title',null,s).textContent='Synchronkörper '+h.n;
     var m=E('g',{class:'part muf',id:'p-m'+h.id},gP);
-    E('rect',{x:h.X-10,y:h.sy-25,width:20,height:50,rx:3},m);
+    E('rect',{x:h.X-h.hw,y:h.sy-25,width:2*h.hw,height:50,rx:3},m);
     E('line',{x1:h.X,y1:h.sy-25,x2:h.X,y2:h.sy-17},m);E('line',{x1:h.X,y1:h.sy+17,x2:h.X,y2:h.sy+25},m);
     E('title',null,m).textContent='Schaltmuffe '+h.n;
     P['h'+h.id]=s; P['m'+h.id]=m;
@@ -367,7 +371,7 @@ function hubOf(id){for(var g in B.gang){if(B.gang[g][0]===id)return B.gang[g][2]
 function flowSteps(g){
   var X=B.X,A=B.YA,Bv=B.YB,st=[],G=B.G,I=B.idler;
   function add(n,ids,pts){st.push({n:n,ids:ids,pts:pts});}
-  var gi=B.gang[g], los=gi[0], fest=gi[1], h=B.H[gi[2]], xh=h.X, KN=h.n, nm=gn(g);
+  var gi=B.gang[g], los=gi[0], fest=gi[1], h=B.H[gi[2]], xh=h.X, xm=xh+gi[3]*B.MS[g], KN=h.n, nm=gn(g);
   function kx(id){var q=G[id];return q.X+Math.sign(xh-q.X)*(GW/2+3);}
   if(cur==='g'){
     var lv=A-16;
@@ -389,7 +393,7 @@ function flowSteps(g){
       }
       add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lv]]);
     }
-    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh,lv]]);
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lv]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,A]]);
     add('Ausgangswelle',['out'],[[X(345),A]]);
   }else if(h.sh==='out'){
@@ -404,14 +408,14 @@ function flowSteps(g){
       add(los+' Losrad '+nm,[los],[[qq.X,lw]]);
     }
     add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lw]]);
-    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh,lw]]);
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lw]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,Bv]]);
     add('Ausgangswelle',['out'],[[X(-120),Bv]]);
   }else{
     var lu=A+16, qu=G[los];
     add('Eingangswelle',['in'],[[X(-120),A],[xh,A]]);
     add('Synchronkörper '+KN,['h'+gi[2]],[[xh,lu]]);
-    add('Schaltmuffe '+KN,['m'+gi[2]],[[xh+Math.sign(qu.X-xh)*10,lu]]);
+    add('Schaltmuffe '+KN,['m'+gi[2]],[[xm,lu]]);
     add('Schaltverzahnung '+nm,['k'+los],[[kx(los),lu]]);
     add(los+' Losrad '+nm,[los],[[qu.X,lu]]);
     add(fest+' Festrad '+nm,[fest],[[qu.X,Bv]]);
@@ -450,7 +454,7 @@ function drawFlow(g,anim,onStep){
 }
 function setMuffe(g){
   B.hubs.forEach(function(h){P['m'+h.id].style.transform='';});
-  if(!g)return; var gi=B.gang[g]; P['m'+gi[2]].style.transform='translateX('+(gi[3]*9)+'px)';
+  if(!g)return; var gi=B.gang[g]; P['m'+gi[2]].style.transform='translateX('+(gi[3]*B.MS[g])+'px)';
 }
 function sameDir(g){return cur==='g'?g!==6:g===6;}
 function setSpin(g){
