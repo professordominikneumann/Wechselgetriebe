@@ -224,8 +224,8 @@ var NS='http://www.w3.org/2000/svg';
 function E(t,a,p){var e=document.createElementNS(NS,t);if(a)for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
 var RPX=1.75, GW=24;
 // Synchronisierung im Schema (px ab Nabenmitte): Synchronkörper und Muffe ±11, Synchronring 12–17, Schaltverzahnung 18–25.
-// Eingelegt fährt die Muffe 15 px: Sie überdeckt die Schaltverzahnung und sitzt noch auf dem Synchronkörper.
-var SY={hw:11,r0:12,r1:17,k0:18,k1:25,ms:15};                 // 1 Zahn = 1,75 px Radius (Modul 2,5 mm, Maßstab 1,4 px/mm); Radbreite im Schema
+// Eingelegt fährt die Muffe 14 px: Sie überdeckt die Schaltverzahnung und sitzt noch auf dem Synchronkörper.
+var SY={hw:11,r0:12,r1:17,k0:18,k1:25,ms:14};                 // 1 Zahn = 1,75 px Radius (Modul 2,5 mm, Maßstab 1,4 px/mm); Radbreite im Schema
 var reduce=false; try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(x){}
 var fmt=function(v,d){return v.toFixed(d===undefined?2:d).replace('.',',');};
 var gn=function(g){return g===6?'Rückwärtsgang':g+'. Gang';};
@@ -263,9 +263,14 @@ var BAU={
   var B=BAU[k]; B.G={}; B.T={};
   B.sy=function(sh){var s=B.shafts.filter(function(q){return q.id===sh;})[0];return s.y==='A'?B.YA:B.YB;};
   B.gears=B.gears.map(function(a){var q={id:a[0],t:a[1],x:a[2],sh:a[3],type:a[4]};q.X=B.X(q.x);q.sy=B.sy(q.sh);q.r=q.t*RPX;B.G[q.id]=q;B.T[q.id]=q.t;return q;});
-  var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
-  I.X=B.X(I.x)+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
   B.H={}; B.hubs.forEach(function(h){h.X=B.X(h.x);h.sy=B.sy(h.sh);B.H[h.id]=h;});
+  // Im Schema sitzt jedes Losrad direkt an seiner Schaltverzahnung; sein Partnerrad rückt mit.
+  for(var gk in B.gang){var gi=B.gang[gk],h=B.H[gi[2]],nx=h.X+gi[3]*(SY.k1+GW/2);B.G[gi[0]].X=nx;if(gi[1])B.G[gi[1]].X=nx;}
+  if(B.G.Z1.type==='fest'&&B.dogs.Z1)B.G.Z2.X=B.G.Z1.X;
+  B.shafts.forEach(function(s){s.X0=B.X(s.x0);s.X1=B.X(s.x1);});
+  if(k==='g'){var h34=B.H['34'];B.shafts[0].X1=h34.X-SY.hw-4;B.shafts[1].X0=h34.X-SY.hw-1;}
+  var I=B.idler, top=B.G[I.top], bot=B.G[I.bot];
+  I.X=B.G.Z13.X+30; I.r=I.t*RPX; I.cy=((top.sy+top.r)+(bot.sy-bot.r))/2; B.T.Z12=I.t;
 });
 
 /* ===== Schema zeichnen ===== */
@@ -293,7 +298,7 @@ function build(){
   // Wellen
   B.shafts.forEach(function(s){
     var y=s.y==='A'?B.YA:B.YB, g=E('g',{class:'part shaft',id:'p-'+s.id},gP);
-    E('line',{x1:X(s.x0),y1:y,x2:X(s.x1),y2:y,style:'stroke:'+SC[s.id]},g);
+    E('line',{x1:s.X0,y1:y,x2:s.X1,y2:y,style:'stroke:'+SC[s.id]},g);
     P[s.id]=g;
   });
   // Rücklaufrad
@@ -318,7 +323,7 @@ function build(){
     if(hub){
       var h=B.H[hub], side=Math.sign(h.X-q.X), ka=h.X-side*SY.k1, kb=h.X-side*SY.k0, ge=q.X+side*GW/2;
       var k=E('g',{class:'part dog'+(q.type==='fest'?' fix':''),id:'p-k'+q.id},gP);
-      E('rect',{class:'mantel',x:Math.min(ge,ka),y:q.sy-7,width:Math.abs(ka-ge),height:14},k);
+      if(Math.abs(ka-ge)>0.5)E('rect',{class:'mantel',x:Math.min(ge,ka),y:q.sy-7,width:Math.abs(ka-ge),height:14},k);
       E('rect',{x:Math.min(ka,kb),y:q.sy-14,width:SY.k1-SY.k0,height:28,rx:1},k);
       var rg=E('g',{class:'part ring'},gP);
       E('rect',{x:Math.min(h.X-side*SY.r0,h.X-side*SY.r1),y:q.sy-13,width:SY.r1-SY.r0,height:26,rx:1},rg);
@@ -380,13 +385,13 @@ function flowSteps(g){
   function kx(id){var q=G[id];return xh-Math.sign(xh-q.X)*(SY.k0+SY.k1)/2;}
   if(cur==='g'){
     var lv=A-16;
-    add('Eingangswelle',['in'],[[X(-120),A],[X(0),A]]);
+    add('Eingangswelle',['in'],[[X(-120),A],[G.Z1.X,A]]);
     if(g===4){
-      add('Z1 Antriebsrad mit Schaltverzahnung',['Z1','kZ1'],[[X(0),lv],[kx('Z1'),lv]]);
+      add('Z1 Antriebsrad mit Schaltverzahnung',['Z1','kZ1'],[[G.Z1.X,lv],[kx('Z1'),lv]]);
     }else{
       var q=G[los];
-      add('Z1 Antriebsrad',['Z1'],[[X(0),A+34]]);
-      add('Z2 Festrad Antrieb',['Z2'],[[X(0),Bv]]);
+      add('Z1 Antriebsrad',['Z1'],[[G.Z1.X,A+34]]);
+      add('Z2 Festrad Antrieb',['Z2'],[[G.Z2.X,Bv]]);
       add('Vorgelegewelle',['cs'],[[q.X,Bv]]);
       if(g===6){
         add('Z11 Festrad Rückwärtsgang',['Z11'],[[q.X,I.cy+12]]);
