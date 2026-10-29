@@ -1053,7 +1053,7 @@ function show(i){
   stopSpeech(); stopPlayer();
   $('kick').textContent=s.k; $('st').textContent=s.t; $('sb').innerHTML=s.h;
   $('cnt').textContent='Schritt '+(idx+1)+' von '+S.length;
-  $('prev').disabled=idx===0; $('next').textContent=idx===S.length-1?(cur==='g'?'Zur ungleichachsigen Bauart →':'Zur gleichachsigen Bauart →'):'Weiter →';
+  $('prev').disabled=idx===0; $('next').textContent=idx===S.length-1?(SYNCMODE?'Fertig ✓':cur==='g'?'Zur ungleichachsigen Bauart →':'Zur gleichachsigen Bauart →'):'Weiter →'; $('next').disabled=SYNCMODE&&idx===S.length-1;
   renderRail();
   curList=null;
   var fs=$('sb').querySelector('[data-slot="flow"]');
@@ -1067,7 +1067,7 @@ function show(i){
   $('sv').parentNode.hidden=!!med; $('keys').hidden=!!med; $('cap').hidden=!!med; $('media').hidden=!med;
   if(med){drawFlow(0);lastDur=buildMedia(med,$('sb').querySelector('[data-slot]'));}
   else{$('media').innerHTML=''; if(!ex)lastDur=applyScene(s.sc); else lastDur=0;}
-  try{if(location.hash.slice(1)!==BAU[cur].key)history.replaceState(null,'','#'+BAU[cur].key);}catch(x){}
+  try{if(!SYNCMODE&&location.hash.slice(1)!==BAU[cur].key)history.replaceState(null,'','#'+BAU[cur].key);}catch(x){}
   if(playing)schedule();
 }
 function explore(box){
@@ -1088,7 +1088,7 @@ function explore(box){
   pick(1);
 }
 function quiz(box){
-  var Q=QUIZ[cur], got=0, done=0;
+  var Q=SYNCMODE?QUIZ.s:QUIZ[cur], got=0, done=0;
   box.innerHTML='<p>Beantworte die Fragen. Du siehst sofort, ob es stimmt.</p>'+Q.map(function(q,i){return '<div class="q" data-i="'+i+'"><b>'+(i+1)+'. '+q.q+'</b><div class="opts">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><div class="fb"></div></div>';}).join('')+
     '<p class="score" id="score"></p><div class="row"><button class="btn pri" type="button" id="go3d">3D-Modell öffnen</button><button class="btn" type="button" id="goEx">Übungsaufgaben</button><button class="btn" type="button" id="again">Fragen zurücksetzen</button></div>';
   box.querySelectorAll('.q').forEach(function(d){
@@ -1154,7 +1154,7 @@ $('play').onclick=function(){
 };
 $('voice').onchange=function(){if(playing)schedule();};
 $('prev').onclick=function(){show(idx-1);};
-$('next').onclick=function(){if(idx===STEPS[cur].length-1){setPlaying(false);setBau(cur==='g'?'u':'g',0);}else show(idx+1);};
+$('next').onclick=function(){if(idx===STEPS[cur].length-1){if(SYNCMODE)return;setPlaying(false);setBau(cur==='g'?'u':'g',0);}else show(idx+1);};
 $('rail').onclick=function(e){var b=e.target.closest('.chip');if(b)show(+b.dataset.i);};
 document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){setPlaying(false);setBau(b.dataset.b,0);};});
 document.addEventListener('keydown',function(e){
@@ -1167,6 +1167,29 @@ $('back').onclick=function(){
   else if(window.__emb&&parent!==window){try{parent.postMessage('gb-back','*');}catch(x){}}
   else location.href='index.html';
 };
+/* ===== Eigenständige Lerneinheit „Synchronisierung“ (window.__ONLY='sync') ===== */
+var SYNCMODE=window.__ONLY==='sync';
+if(SYNCMODE){
+  QUIZ.s=[
+   {q:'Welche Aufgabe hat die Synchronisierung?',o:['Sie ändert die Übersetzung des Gangs.','Sie gleicht die Drehzahlen von Losrad und Welle an, bevor die Muffe einrückt.','Sie überträgt die Kraft vom Festrad auf das Losrad.'],a:1,w:'Erst wenn Losrad und Welle gleich schnell drehen, kann die Schaltmuffe ohne Krachen in die Schaltverzahnung einrücken.'},
+   {q:'Wodurch werden die Drehzahlen angeglichen?',o:['Durch die Rastnase der Schaltstücke.','Durch die Evolventenverzahnung.','Durch Reibung zwischen dem Innenkonus des Synchronrings und dem Reibkonus.'],a:2,w:'Der Synchronring wird auf den Reibkonus am Losrad gedrückt. Die Reibung bremst oder beschleunigt das Losrad.'},
+   {q:'Warum lässt sich die Muffe nicht durchschieben, solange noch ein Drehzahlunterschied besteht?',o:['Die Reibkraft am Konus ist größer als die Rückdrehkraft der Dachschrägen, der Ring sperrt.','Die Druckfedern sind zu stark.','Das Losrad ist fest mit der Welle verbunden.'],a:0,w:'Erst bei Gleichlauf fällt die Reibkraft weg. Dann dreht die Dachschräge den Ring zurück, und die Muffe kann durch.'},
+   {q:'Wie ist der Synchronkörper mit der Welle verbunden?',o:['Über ein Nadellager, er dreht frei.','Formschlüssig über eine Keilwellenverzahnung.','Über die Schaltgabel.'],a:1,w:'Der Synchronkörper dreht immer mit der Welle. Die Schaltmuffe sitzt verschiebbar auf ihm.'},
+   {q:'Welche Bauteile sind im eingelegten Gang formschlüssig verbunden?',o:['Festrad – Synchronring – Welle','Schaltgabel – Schaltmuffe – Losrad','Losrad – Schaltverzahnung – Schaltmuffe – Synchronkörper – Welle'],a:2,w:'So fließt die Kraft vom Losrad über Schaltverzahnung, Schaltmuffe und Synchronkörper auf die Welle.'},
+   {q:'Wozu dient die Rastnase des Schaltstücks?',o:['Sie hält die Muffe in Neutralstellung und nimmt beim Schalten die Schaltstücke mit.','Sie verbindet das Losrad mit der Welle.','Sie dreht den Synchronring zurück.'],a:0,w:'Über die Rastnase schieben die Schaltstücke den Synchronring auf den Konus (Vorsynchronisieren).'},
+   {q:'Warum haben Zahnräder eine Evolventenverzahnung?',o:['Damit die Schaltmuffe besser gleitet.','Damit die Zähne aufeinander abwälzen und die Drehbewegung gleichmäßig übertragen wird.','Damit das Losrad frei drehen kann.'],a:1,w:'Bei der Evolventenverzahnung wandert der Berührpunkt auf einer geraden Eingriffslinie, die Übersetzung bleibt in jeder Stellung gleich.'}
+  ];
+  STEPS.g=[{k:'Start',t:'Synchronisierung im Schaltgetriebe',h:
+    '<p>In einem Schaltgetriebe sind alle Zahnräder ständig im Eingriff. Die <b>Losräder</b> drehen frei auf ihrer Welle. Erst die <b>Synchronisierung</b> verbindet beim Schalten ein Losrad mit der Welle, und zwar ohne Krachen.</p>'+
+    '<p>In dieser Lerneinheit lernst du:</p><ol><li>wie ein <b>Festrad</b> ein <b>Losrad</b> antreibt (Evolventenverzahnung),</li><li>wie die Kraft vom Losrad auf die <b>Welle</b> kommt,</li><li>aus welchen <b>Bauteilen</b> die Borg-Warner-Synchronisierung besteht,</li><li>warum der Synchronring <b>sperrt</b>, bis die Drehzahlen gleich sind,</li><li>wie das <b>Schalten</b> Schritt für Schritt abläuft.</li></ol>'+
+    '<p>Links siehst du das Schema eines gleichachsigen 5-Gang-Getriebes. Hervorgehoben sind die drei Synchronisierungen mit ihren Losrädern. Klicke auf „Weiter“ oder starte die Lerneinheit als Video.</p>',
+    sc:{hi:['m34','m12','m5R','h34','h12','h5R','Z1','Z4','Z6','Z8','Z10','Z13','kZ1','kZ4','kZ6','kZ8','kZ10','kZ13','out'],lbl:['m34','m12','m5R','Z4','Z6','Z8','Z10','Z13']}}]
+    .concat(SYNC('g')).concat([{k:'Abschluss',t:'Wissenscheck',stop:true,h:'<div data-slot="quiz"></div>',sc:{lbl:'gears'}}]);
+  document.querySelector('.tabs').hidden=true;
+  document.querySelector('.ttl .tag').textContent='Lerneinheit · Schaltgetriebe';
+  document.querySelector('.ttl h1').textContent='Synchronisierung';
+  document.title='Synchronisierung';
+}
 var start=(window.__sel||location.hash.slice(1)||'').toLowerCase();
 setBau(start==='ungleichachsig'?'u':'g',0);
 try{if(window.__emb&&parent!==window)parent.postMessage('gb-ready','*');}catch(x){}
