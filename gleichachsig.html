@@ -317,7 +317,7 @@ const MOD=2.5, CD=100, BETA=20*PI/180, TRAVEL=12, NSP=36, PITCH=TAU/NSP;
 const Zt={in:35,cin:45,g1:59,c1:21,g2:50,c2:30,g3:42,c3:38,g5:31,c5:49,gR:50,cR:20,idl:20};
 const HX={m43:40,m21:124,m5R:222};            // Mitte der Synchronnaben (x)
 const GOFF=33.5;                              // Hub-Mitte → Radmitte
-const GX={in:0,g3:HX.m43+GOFF,g2:HX.m21-GOFF,g1:HX.m21+GOFF,gR:HX.m5R-GOFF,g5:HX.m5R+GOFF};
+const GX={in:HX.m43-GOFF,g3:HX.m43+GOFF,g2:HX.m21-GOFF,g1:HX.m21+GOFF,gR:HX.m5R-GOFF,g5:HX.m5R+GOFF};
 const rpi=MOD*Zt.idl/2, rpR=MOD*Zt.gR/2, rcR=MOD*Zt.cR/2;
 const d1=rpR+rpi, d2=rcR+rpi;
 const IY=(d2*d2-d1*d1-CD*CD)/(2*CD);          // Lage des Rücklaufrades (y,z)
@@ -810,7 +810,7 @@ SYNC.forEach(s=>{
     const dx=d>0?[xh+14,xh+21]:[xh-21,xh-14];   // schmale Klauenverzahnung (7 mm)
     const pDog=addPart({name:(loose?'Schaltverzahnung '+side.nm:'Schaltverzahnung Eingangswelle')+' – Verzahnung (fest mit '+(loose?'dem Losrad':'der Eingangswelle')+' verbunden)',geo:polarSolid({outer:dogPts,inner:26,x0:dx[0],x1:dx[1]}),color:loose?COL.loose:COL.in,rot:rot,phase:ph,tags:[tg],hatch:'H1'});
     // dünner Verbindungsmantel von der Klauenverzahnung zum Zahnrad
-    const xe=loose?xh+d*25.5:8;      // Zahnradstirnfläche (Losrad bzw. Z1 am Eingang)
+    const xe=loose?xh+d*25.5:GX.in+8;      // Zahnradstirnfläche (Losrad bzw. Z1 am Eingang)
     const sa=Math.min(xe,d>0?dx[1]:dx[0]), sb=Math.max(xe,d>0?dx[1]:dx[0]);
     const pShell=addPart({name:(loose?'Schaltverzahnung '+side.nm:'Schaltverzahnung Eingangswelle')+' – Verbindungsmantel zum Zahnrad',geo:revolve([[sa,30.5],[sb,30.5],[sb,26],[sa,26]],64),color:loose?COL.loose:COL.in,rot:rot,phase:ph,tags:[tg],hatch:'H1'});
     if(loose){
@@ -826,7 +826,7 @@ SYNC.forEach(s=>{
     }else{
       const xcone=xh+d*14, xring=xh+d*21, grp=[pZ1,pDog,pCone,pShell];
       grp.forEach(q=>q.grp=grp);
-      pCone.seams=[[xcone,26,27.9]]; pDog.seams=[[xcone,26,27.9],[xring,26,30.55]]; pShell.seams=[[xring,26,30.55],[8,26,30.55]]; pZ1.seams=[[8,26,30.55]];
+      pCone.seams=[[xcone,26,27.9]]; pDog.seams=[[xcone,26,27.9],[xring,26,30.55]]; pShell.seams=[[xring,26,30.55],[GX.in+8,26,30.55]]; pZ1.seams=[[GX.in+8,26,30.55]];
     }
   });
 });
@@ -907,14 +907,14 @@ function stepsFor(g){
   const xs=xh+d*4, xr=xh+d*11, xm=xh+d*12;
   const KN={m21:'1./2.',m43:'3./4.',m5R:'5./R'}[key];
   if(g===4){
-    add('Eingangswelle',['in'],[V3(-110,0,0),V3(0,0,0)]);
-    add('Z1 Antriebsrad (4. Gang)',['gin'],[PL(6,28,al)]);
+    add('Eingangswelle',['in'],[V3(-110,0,0),V3(GX.in,0,0)]);
+    add('Z1 Antriebsrad (4. Gang)',['gin'],[PL(GX.in+6,28,al)]);
     add('Schaltverzahnung '+KN,['dog'],[PL(xr,26,al)]);
   }else{
     const xc=GX[I.k], Zm=Zt[I.k];
-    add('Eingangswelle',['in'],[V3(-110,0,0),V3(0,0,0)]);
-    add('Z1 Antriebsrad',['gin'],[V3(0,-MOD*Zt.in/2,0)]);
-    add('Z2 Festrad Antrieb',['cin'],[V3(0,-CD,0)]);
+    add('Eingangswelle',['in'],[V3(-110,0,0),V3(GX.in,0,0)]);
+    add('Z1 Antriebsrad',['gin'],[V3(GX.in,-MOD*Zt.in/2,0)]);
+    add('Z2 Festrad Antrieb',['cin'],[V3(GX.in,-CD,0)]);
     add('Vorgelegewelle',['cs'],[V3(xc,-CD,0)]);
     if(g===6){
       const Pci=V3(xc,-CD+rcR*Math.cos(phiCI),rcR*Math.sin(phiCI));
@@ -1189,7 +1189,7 @@ function hover(e){
 const labSvg=$('lab');
 const LAB=[
   ['Eingangswelle',[-85,16,0],'core'],
-  ['Z1 Antriebsrad (Festrad)',[0,44,0],'core'],
+  ['Z1 Antriebsrad (Festrad)',[GX.in,44,0],'core'],
   ['Schaltmuffe 3./4.',[40,46,0],'core'],
   ['Z8 Losrad 3. Gang',[GX.g3,53,0],'core'],
   ['Z6 Losrad 2. Gang',[GX.g2,63,0],'core'],
