@@ -641,6 +641,7 @@ function buildMedia(kind,box){
     return 0;
   }
   if(kind==='lock'){ player=lockPlayer(md,box); return 10500; }
+  if(kind==='explode'){ player=explodePlayer(md,box); return 5200; }
   return 0;
 }
 
@@ -716,6 +717,35 @@ function gearPlayer(md,box){
   $('gHelpCb').onchange=function(){var v=this.checked?'':'none';$('gHelp').style.display=v;$('gHelp2').style.display=v;};
   draw(); btn(); if(run)raf=requestAnimationFrame(loop);
   return{stop:function(){run=false;cancelAnimationFrame(raf);}};
+}
+
+/* ===== Explosionsansicht der Synchronisierung 1./2. (Bildfolge aus dem 3D-Modell) ===== */
+var EXM=[[1,130,300],[2,340,285],[3,470,432],[4,478,246],[5,450,60],[6,600,240],[7,735,215],[8,800,120],[9,905,215]];
+function explodePlayer(md,box){
+  var N=12, f=0, target=0, raf=0, last=0, wait=0;
+  md.innerHTML=shot('exImg',img('ex00'),960,560,EXM,'Explosionsansicht der Synchronisierung 1./2. aus dem 3D-Modell')+
+    '<div class="shotcap">3D-Modell: Synchronisierung 1./2. mit beiden Losrädern auf der Ausgangswelle. Die Schaltmuffe ist nach oben herausgezogen.</div>';
+  box.innerHTML='<div class="row"><button class="btn pri" type="button" id="exBtn">Auseinanderziehen</button></div>'+
+    '<label class="nosay" for="exRng" style="display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--mut)"><span style="display:flex;justify-content:space-between"><span>zusammengebaut</span><span>auseinandergezogen</span></span>'+
+    '<input type="range" class="scrub" id="exRng" min="0" max="'+N+'" step="1" value="0" aria-label="Explosionsgrad"></label>';
+  var mk=md.querySelector('svg.mk'); mk.style.transition='opacity .35s';
+  function draw(){
+    var i=Math.round(f); $('exImg').src=img('ex'+(i<10?'0':'')+i);
+    $('exRng').value=i; mk.style.opacity=i>=N-2?1:0;
+    $('exBtn').textContent=target>0?'Zusammenbauen':'Auseinanderziehen';
+  }
+  function loop(now){
+    var dt=last?now-last:0; last=now;
+    if(wait>0){wait-=dt;raf=requestAnimationFrame(loop);return;}
+    var step=dt/180; if(Math.abs(target-f)<=step){f=target;draw();return;}
+    f+=target>f?step:-step; draw(); raf=requestAnimationFrame(loop);
+  }
+  function go(t,delay){target=t;wait=delay||0;last=0;cancelAnimationFrame(raf);if(reduce){f=t;draw();return;}raf=requestAnimationFrame(loop);}
+  $('exBtn').onclick=function(){go(target>0?0:N);};
+  $('exRng').oninput=function(){cancelAnimationFrame(raf);f=+this.value;target=f>N/2?N:0;draw();};
+  Object.keys(IMG||{}).forEach(function(k){if(/^exd/.test(k)){var im=new Image();im.src=IMG[k];}});
+  draw(); go(N,700);
+  return{stop:function(){cancelAnimationFrame(raf);}};
 }
 
 /* ===== Sperrprinzip: Dachschrägen von Muffe und Synchronring ===== */
@@ -1169,6 +1199,22 @@ $('back').onclick=function(){
 };
 /* ===== Eigenständige Lerneinheit „Synchronisierung“ (window.__ONLY='sync') ===== */
 var SYNCMODE=window.__ONLY==='sync';
+var EXSTEP={k:'Schritt 2 · Schalten',t:'Explosionsansicht',h:
+  '<div data-slot="explode"></div>'+
+  '<p>In der Explosionsansicht ist die Synchronisierung 1./2. aus dem 3D-Modell entlang der Welle auseinandergezogen. So siehst du jedes Bauteil einzeln und in der Reihenfolge, in der es auf der Welle sitzt. Zieh den Regler oder drücke „Auseinanderziehen“.</p>'+
+  '<ol class="parts">'+[
+    ['var(--loose)','Losrad Z6 (2. Gang)','mit Schaltverzahnung und Reibkonus; in der Bohrung das Nadellager.'],
+    ['#f2b705','Synchronring 2. Gang','außen die Sperrverzahnung, innen der Konus.'],
+    ['var(--sync)','Synchronkörper','sitzt mit der Keilwellenverzahnung fest auf der Welle.'],
+    ['#f0307f','Schaltstücke mit Druckfedern','liegen in den drei Nuten des Synchronkörpers.'],
+    ['var(--muffe)','Schaltmuffe','innen verzahnt, außen die Nut für die Schaltgabel; hier nach oben herausgezogen.'],
+    ['#f2b705','Synchronring 1. Gang',''],
+    ['var(--loose)','Schaltverzahnung mit Reibkonus','fest mit dem Losrad Z4 verbunden.'],
+    ['var(--loose)','Losrad Z4 (1. Gang)',''],
+    ['var(--out)','Ausgangswelle','']
+  ].map(function(p,i){return '<li><b class="n">'+(i+1)+'</b><i style="background:'+p[0]+'"></i><span><b>'+p[1]+'</b>'+(p[2]?': '+p[2]:'')+'</span></li>';}).join('')+'</ol>'+
+  '<div class="box"><h3>Reihenfolge auf der Welle</h3><p style="margin:0">Losrad Z6 – Synchronring – Synchronkörper mit Schaltstücken und Schaltmuffe – Synchronring – Losrad Z4</p></div>',
+  sc:{media:'explode'}};
 if(SYNCMODE){
   QUIZ.s=[
    {q:'Welche Aufgabe hat die Synchronisierung?',o:['Sie ändert die Übersetzung des Gangs.','Sie gleicht die Drehzahlen von Losrad und Welle an, bevor die Muffe einrückt.','Sie überträgt die Kraft vom Festrad auf das Losrad.'],a:1,w:'Erst wenn Losrad und Welle gleich schnell drehen, kann die Schaltmuffe ohne Krachen in die Schaltverzahnung einrücken.'},
@@ -1184,7 +1230,7 @@ if(SYNCMODE){
     '<p>In dieser Lerneinheit lernst du:</p><ol><li>wie ein <b>Festrad</b> ein <b>Losrad</b> antreibt (Evolventenverzahnung),</li><li>wie die Kraft vom Losrad auf die <b>Welle</b> kommt,</li><li>aus welchen <b>Bauteilen</b> die Borg-Warner-Synchronisierung besteht,</li><li>warum der Synchronring <b>sperrt</b>, bis die Drehzahlen gleich sind,</li><li>wie das <b>Schalten</b> Schritt für Schritt abläuft.</li></ol>'+
     '<p>Links siehst du das Schema eines gleichachsigen 5-Gang-Getriebes. Hervorgehoben sind die drei Synchronisierungen mit ihren Losrädern. Klicke auf „Weiter“ oder starte die Lerneinheit als Video.</p>',
     sc:{hi:['m34','m12','m5R','h34','h12','h5R','Z1','Z4','Z6','Z8','Z10','Z13','kZ1','kZ4','kZ6','kZ8','kZ10','kZ13','out'],lbl:['m34','m12','m5R','Z4','Z6','Z8','Z10','Z13']}}]
-    .concat(SYNC('g')).concat([{k:'Abschluss',t:'Wissenscheck',stop:true,h:'<div data-slot="quiz"></div>',sc:{lbl:'gears'}}]);
+    .concat((function(a){var i=a.findIndex(function(x){return x.t==='Die Bauteile der Synchronisierung';});a.splice(i+1,0,EXSTEP);return a;})(SYNC('g'))).concat([{k:'Abschluss',t:'Wissenscheck',stop:true,h:'<div data-slot="quiz"></div>',sc:{lbl:'gears'}}]);
   document.querySelector('.tabs').hidden=true;
   document.querySelector('.ttl .tag').textContent='Lerneinheit · Schaltgetriebe';
   document.querySelector('.ttl h1').textContent='Synchronisierung';
