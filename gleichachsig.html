@@ -82,6 +82,14 @@ body{margin:0;height:100%;background:var(--bg);color:var(--ink);
 #tip{position:fixed;pointer-events:none;background:rgba(20,28,38,.92);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;display:none;z-index:5;max-width:260px}
 #info details{margin-top:6px;font-size:11px;color:var(--mut)}
 #info summary{cursor:pointer}
+/* Infobox ausblendbar */
+#info{padding-right:30px}
+#infoTgl{position:absolute;top:2px;right:3px;border:0;background:transparent;color:var(--mut);font:inherit;font-size:18px;line-height:1;padding:4px 7px;border-radius:6px;cursor:pointer}
+#infoTgl:hover{background:var(--line);color:var(--ink)}
+#infoTgl:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#info.zu{padding:0;left:auto!important;max-height:none!important;overflow:visible!important;width:auto!important}
+#info.zu>*:not(#infoTgl){display:none!important}
+#info.zu #infoTgl{position:static;display:block;font-size:13px;font-weight:600;color:var(--ink);padding:6px 10px;white-space:nowrap}
 #cutSl{position:absolute;right:12px;top:0;bottom:0;width:44px;z-index:3}
 #cutTrack{position:absolute;left:19px;top:0;bottom:0;width:6px;border-radius:3px;background:var(--line)}
 #cutHandle{position:absolute;left:-19px;width:44px;height:30px;margin-top:-15px;border-radius:6px;background:var(--knob);color:#fff;font-size:20px;line-height:30px;text-align:center;cursor:ns-resize;touch-action:none;user-select:none}
@@ -254,7 +262,7 @@ html.touch.flowon #bar .fcol>.sw{display:flex!important}
       <div class="txt" id="fTxt"></div>
     </div>
     <div id="cutSl"><div id="cutTrack"><div id="cutHandle" tabindex="0" role="slider" aria-label="Schnittbereich von oben nach unten" aria-orientation="vertical" title="Schnittgrenze verschieben (Griff nach unten ziehen = Schnitt)">⇕</div></div></div>
-    <div id="info">
+    <div id="info"><button id="infoTgl" type="button" aria-expanded="true" aria-controls="info" title="Infobox ausblenden">×</button>
       <div class="big">Gang <span id="iG">N</span></div>
       <div>Übersetzung i = <b id="iI">–</b></div>
       <div>Antrieb <b id="iIn">0</b> → Abtrieb <b id="iOut">0</b> min⁻¹</div>
@@ -1691,6 +1699,23 @@ $('btnBack').addEventListener('click',function(){ if(window.__wr) location.reloa
 if(window.__PREVIEW){ document.documentElement.classList.add('pv'); setView('iso'); view.dist*=1.38; view.target.set(120,-30,0); applyCam(); }
 frame();
 if(window.__PREVIEW||window.__emb) requestAnimationFrame(function(){ requestAnimationFrame(function(){ try{ parent.postMessage('gb-ready','*'); }catch(x){} }); });
+})();
+</script>
+<script>
+/* Infobox ein-/ausblenden; die Einstellung merkt sich der Browser */
+(function(){
+  var box=document.getElementById('info'), btn=document.getElementById('infoTgl');
+  if(!box||!btn) return;
+  function setZu(zu){
+    box.classList.toggle('zu',zu);
+    btn.textContent=zu?'ⓘ Info':'×';
+    btn.title=zu?'Infobox einblenden':'Infobox ausblenden';
+    btn.setAttribute('aria-expanded',zu?'false':'true');
+    try{localStorage.setItem('gbInfoZu',zu?'1':'0');}catch(e){}
+  }
+  btn.addEventListener('click',function(e){e.stopPropagation();setZu(!box.classList.contains('zu'));});
+  var zu=false; try{zu=localStorage.getItem('gbInfoZu')==='1';}catch(e){}
+  setZu(zu);
 })();
 </script>
 </body>
