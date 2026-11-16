@@ -421,7 +421,7 @@ function slotPts(pts,centers,hw,rOut,rFloor){
 /* Prismatischer Körper aus Polarkontur (außen) und Bohrung/Innenkontur, Achse = x */
 function polarSolid(o){
   const out=o.outer,K=out.length,x0=o.x0,x1=o.x1,inn=o.inner||0;
-  const tanB=o.tanB||0,hand=o.hand||1,rp=o.rp||1,xc=(x0+x1)/2,L=tanB?4:1;
+  const tanB=o.tanB||0,hand=o.hand||1,rp=o.rp||1,xc=(x0+x1)/2,L=tanB?Math.max(4,Math.ceil((x1-x0)/1.2)):1;
   const tw=x=>hand*(x-xc)*tanB/rp;
   const arr=Array.isArray(inn);
   const ri0=k=>arr?inn[k][1]:inn;
@@ -433,7 +433,7 @@ function polarSolid(o){
   const ch=o.ch||0, rT=o.rTip||0, chi=o.chi||0;
   let xs=[]; for(let l=0;l<=L;l++) xs.push(x0+(x1-x0)*l/L);
   if(ch||chi){ if(ch) xs.push(x0+ch,x1-ch); if(chi) xs.push(x0+chi,x1-chi); xs=xs.filter((v,i)=>xs.findIndex(w=>Math.abs(w-v)<1e-6)===i).sort((p,q)=>p-q); }
-  const cl=(r,x)=>ch?Math.min(r,rT-ch+Math.min(x-x0,x1-x)):r;
+  const cl=(r,x)=>(ch&&!tanB)?Math.min(r,rT-ch+Math.min(x-x0,x1-x)):r;
   for(let k=0;k<K;k++){
     const k2=(k+1)%K, a=out[k][0], a2=out[k2][0], ro=out[k][1], ro2=out[k2][1], rn=ri0(k), rn2=ri0(k2);
     for(let l=0;l<xs.length-1;l++){
