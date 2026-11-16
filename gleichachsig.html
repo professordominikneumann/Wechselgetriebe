@@ -432,13 +432,14 @@ function polarSolid(o){
   const tri=(a,b,c)=>{pos.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2]);};
   const ch=o.ch||0, rT=o.rTip||0, chi=o.chi||0;
   let xs=[]; for(let l=0;l<=L;l++) xs.push(x0+(x1-x0)*l/L);
-  if(ch||chi){ if(ch) xs.push(x0+ch,x1-ch); if(chi) xs.push(x0+chi,x1-chi); xs=xs.filter((v,i)=>xs.findIndex(w=>Math.abs(w-v)<1e-6)===i).sort((p,q)=>p-q); }
-  const cl=(r,x)=>(ch&&!tanB)?Math.min(r,rT-ch+Math.min(x-x0,x1-x)):r;
+  if(ch||chi){ if(ch) xs.push(x0+ch,x1-ch); if(ch&&o.outerAt) xs.push(x0+ch/2,x1-ch/2); if(chi) xs.push(x0+chi,x1-chi); xs=xs.filter((v,i)=>xs.findIndex(w=>Math.abs(w-v)<1e-6)===i).sort((p,q)=>p-q); }
+  const cl=(r,x)=>(ch&&!o.outerAt)?Math.min(r,rT-ch+Math.min(x-x0,x1-x)):r;
+  const PR=xs.map(x=>o.outerAt?o.outerAt(x):out);   // Kontur je Achsstation (Fase: verkürzte Evolvente)
   for(let k=0;k<K;k++){
     const k2=(k+1)%K, a=out[k][0], a2=out[k2][0], ro=out[k][1], ro2=out[k2][1], rn=ri0(k), rn2=ri0(k2);
     for(let l=0;l<xs.length-1;l++){
-      const xa=xs[l],xb=xs[l+1],ta=tw(xa),tb=tw(xb);
-      const A=P(xa,a+ta,cl(ro,xa)),B=P(xa,a2+ta,cl(ro2,xa)),C=P(xb,a2+tb,cl(ro2,xb)),Dd=P(xb,a+tb,cl(ro,xb));
+      const xa=xs[l],xb=xs[l+1],ta=tw(xa),tb=tw(xb),pa=PR[l],pb=PR[l+1];
+      const A=P(xa,pa[k][0]+ta,cl(pa[k][1],xa)),B=P(xa,pa[k2][0]+ta,cl(pa[k2][1],xa)),C=P(xb,pb[k2][0]+tb,cl(pb[k2][1],xb)),Dd=P(xb,pb[k][0]+tb,cl(pb[k][1],xb));
       tri(A,B,C); tri(A,C,Dd);
       if(hasIn){
         const A2=P(xa,a+ta,rin(rn,xa)),B2=P(xa,a2+ta,rin(rn2,xa)),C2=P(xb,a2+tb,rin(rn2,xb)),D2=P(xb,a+tb,rin(rn,xb));
@@ -448,9 +449,10 @@ function polarSolid(o){
     const da=((a2-a)%TAU+TAU)%TAU;
     if(da<1e-9||da>TAU-1e-9) continue;   // radiale Hinterschnitt-Stufe: Stirnfläche hat hier keine Breite (sonst entarten Dreiecke)
     const t1=tw(x1),t0=tw(x0);
-    const O1=P(x1,a+t1,cl(ro,x1)),O1b=P(x1,a2+t1,cl(ro2,x1)),O0=P(x0,a+t0,cl(ro,x0)),O0b=P(x0,a2+t0,cl(ro2,x0));
+    const pE=PR[PR.length-1],pS=PR[0];
+    const O1=P(x1,pE[k][0]+t1,cl(pE[k][1],x1)),O1b=P(x1,pE[k2][0]+t1,cl(pE[k2][1],x1)),O0=P(x0,pS[k][0]+t0,cl(pS[k][1],x0)),O0b=P(x0,pS[k2][0]+t0,cl(pS[k2][1],x0));
     if(hasIn){
-      const I1=P(x1,a+t1,rin(rn,x1)),I1b=P(x1,a2+t1,rin(rn2,x1)),I0=P(x0,a+t0,rin(rn,x0)),I0b=P(x0,a2+t0,rin(rn2,x0));
+      const I1=P(x1,pE[k][0]+t1,rin(rn,x1)),I1b=P(x1,pE[k2][0]+t1,rin(rn2,x1)),I0=P(x0,pS[k][0]+t0,rin(rn,x0)),I0b=P(x0,pS[k2][0]+t0,rin(rn2,x0));
       tri(O1,O1b,I1b); tri(O1,I1b,I1);
       tri(O0,I0b,O0b); tri(O0,I0,I0b);
     }else{
@@ -462,7 +464,11 @@ function polarSolid(o){
 }
 function gearGeo(o){
   const pts=o.pts||(o.prof?trapPts(o.N,o.rTip,o.rRoot,o.prof):toothPts(o.N,o.rp,o.rTip,o.rRoot));
-  return polarSolid({chi:o.chi,ch:o.ch,rTip:o.rTip,outer:pts,inner:o.bore||0,x0:o.x0,x1:o.x1,tanB:o.beta?Math.tan(o.beta):0,hand:o.hand||1,rp:o.rp});
+  let outerAt=null;
+  if(o.ch&&!o.pts&&!o.prof){ const C={};
+    outerAt=x=>{ const d=Math.min(x-o.x0,o.x1-x), rc=+(d>=o.ch?o.rTip:o.rTip-o.ch+Math.max(0,d)).toFixed(4);
+      return C[rc]||(C[rc]=toothPts(o.N,o.rp,rc,o.rRoot)); }; }
+  return polarSolid({outerAt:outerAt,chi:o.chi,ch:o.ch,rTip:o.rTip,outer:pts,inner:o.bore||0,x0:o.x0,x1:o.x1,tanB:o.beta?Math.tan(o.beta):0,hand:o.hand||1,rp:o.rp});
 }
 function plateGeo(x0,x1){
   const s=new T.Shape(),X=40,Y0=-130,Y1=42,c=14;   // schlankes Gehäuse: nur so groß wie die Lagersitze
