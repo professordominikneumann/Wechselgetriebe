@@ -33,7 +33,7 @@ ul{margin:0;padding-left:18px;color:var(--mut);display:flex;flex-direction:colum
 .go.ex{background:transparent;color:var(--acc);border:2px solid var(--acc);padding:6px 14px}
 @media (max-width:640px){.go{min-height:46px;display:inline-flex;align-items:center;padding:8px 18px}.go.ex{padding:6px 16px}}
 .quizc{margin-top:18px}
-.intro{margin-bottom:20px}
+.intro{margin-top:18px}
 .foot{margin-top:28px;color:var(--mut);font-size:14px;max-width:70ch}
 .sh{fill:none;stroke-width:7;stroke-linecap:round}
 .g{stroke:var(--bg);stroke-width:1.5}
@@ -42,9 +42,6 @@ ul{margin:0;padding-left:18px;color:var(--mut);display:flex;flex-direction:colum
   <div class="tag">Interaktive 3D-Modelle</div>
   <h1>5-Gang-Schaltgetriebe</h1>
   <p class="lead">Wähle die Bauart. Beide Modelle lassen sich schalten, aufschneiden, drehen und mit Kraftfluss und Beschriftung erklären. Zu jeder Bauart gibt es außerdem Übungsaufgaben zum Wissenscheck mit Auswertung.</p>
-  <div class="card intro" role="link" tabindex="0" data-k="einfuehrung"><div class="tag">Einführung · Schritt für Schritt</div><h2>Getriebe verstehen</h2><p>Animierte Einführung zu beiden Bauarten: zum Durchklicken oder als Video mit Vorlesefunktion. Du lernst die Bauart zu erkennen, die Zahnräder Z1 bis Z13 zu benennen und den Kraftfluss in jedem Gang zu bestimmen. Am Ende wartet ein kurzer Wissenscheck.</p><div class="acts"><span class="go">Einführung starten →</span></div></div>
-  <div class="card intro" role="link" tabindex="0" data-k="synchronisierung"><div class="tag">Vertiefung · Schalten</div><h2>Synchronisierung</h2><p>Eigene Lerneinheit zur Borg-Warner-Sperrsynchronisierung: Festrad und Losrad mit Evolventenverzahnung, Kraftweg zur Welle, Bauteile, Schaltstücke und Rastnase, Sperrprinzip und Schaltvorgang als Bildfolge aus dem 3D-Modell. Mit Wissenscheck.</p><div class="acts"><span class="go">Synchronisierung lernen →</span></div></div>
-  <div class="card intro" id="arbeitsblaetter"><div class="tag">Zum Ausdrucken</div><h2>Arbeitsblätter</h2><p>Je ein Arbeitsblatt (DIN A4, 4 Seiten) zu beiden Bauarten: Bauteile in der Seitenansicht benennen, die Bauart erkennen, die Zahnräder Z1 bis Z13 zuordnen und bestimmen, welcher Gang geschaltet ist.</p><div class="acts"><a class="go" style="text-decoration:none" href="arbeitsblatt_gleichachsig.pdf" target="_blank" rel="noopener">Gleichachsig (PDF) →</a><a class="go" style="text-decoration:none" href="arbeitsblatt_ungleichachsig.pdf" target="_blank" rel="noopener">Ungleichachsig (PDF) →</a></div></div>
   <div class="grid">
     <div class="card" role="link" tabindex="0" data-k="gleichachsig">
       <div class="tag">Bauart 1</div>
@@ -63,6 +60,9 @@ ul{margin:0;padding-left:18px;color:var(--mut);display:flex;flex-direction:colum
       <div class="acts"><span class="go">Modell öffnen →</span><span class="go ex" data-ex="einfuehrung#ungleichachsig" role="button" tabindex="0">Einführung →</span><span class="go ex" data-ex="uebung_ungleichachsig" role="button" tabindex="0">Übungsaufgaben →</span></div>
     </div>
   </div>
+  <div class="card intro" role="link" tabindex="0" data-k="einfuehrung"><div class="tag">Einführung · Schritt für Schritt</div><h2>Getriebe verstehen</h2><p>Animierte Einführung zu beiden Bauarten: zum Durchklicken oder als Video mit Vorlesefunktion. Du lernst die Bauart zu erkennen, die Zahnräder Z1 bis Z13 zu benennen und den Kraftfluss in jedem Gang zu bestimmen. Am Ende wartet ein kurzer Wissenscheck.</p><div class="acts"><span class="go">Einführung starten →</span></div></div>
+  <div class="card intro" role="link" tabindex="0" data-k="synchronisierung"><div class="tag">Vertiefung · Schalten</div><h2>Synchronisierung</h2><p>Eigene Lerneinheit zur Borg-Warner-Sperrsynchronisierung: Festrad und Losrad mit Evolventenverzahnung, Kraftweg zur Welle, Bauteile, Schaltstücke und Rastnase, Sperrprinzip und Schaltvorgang als Bildfolge aus dem 3D-Modell. Mit Wissenscheck.</p><div class="acts"><span class="go">Synchronisierung lernen →</span></div></div>
+  <div class="card intro" id="arbeitsblaetter"><div class="tag">Zum Ausdrucken</div><h2>Arbeitsblätter</h2><p>Je ein Arbeitsblatt (DIN A4, 4 Seiten) zu beiden Bauarten: Bauteile in der Seitenansicht benennen, die Bauart erkennen, die Zahnräder Z1 bis Z13 zuordnen und bestimmen, welcher Gang geschaltet ist.</p><div class="acts"><a class="go" style="text-decoration:none" href="arbeitsblatt_gleichachsig.pdf" target="_blank" rel="noopener">Gleichachsig (PDF) →</a><a class="go" style="text-decoration:none" href="arbeitsblatt_ungleichachsig.pdf" target="_blank" rel="noopener">Ungleichachsig (PDF) →</a></div></div>
   <div class="card quizc" role="link" tabindex="0" data-k="quiz"><div class="tag">Wissenscheck</div><h2>Getriebe-Quiz</h2><p>Gemischte Aufgaben zu beiden Bauarten: Bauart erkennen, eingelegten Gang bestimmen, Kraftfluss in die richtige Reihenfolge bringen und Zahnräder und Bauteile bezeichnen. Mit Auswertung am Ende.</p><div class="acts"><span class="go">Quiz starten →</span></div></div>
   <div class="card quizc" role="link" tabindex="0" data-k="spiel"><div class="tag">Lernspiel</div><h2>Getriebe-Challenge</h2><p>Drei Schwierigkeitsstufen (leicht, mittel, schwer) mit je 10 Fragen gegen die Uhr. Sammle Punkte mit Zeitbonus und Serien und trage dich in den Highscore ein.</p><div class="acts"><span class="go">Spiel starten →</span></div></div>
   <p class="foot">Bedienung in beiden Modellen: Gang im Schaltschema oder mit den Tasten 1–5, R, N wählen. Mit dem Regler rechts wird das Modell aufgeschnitten. Bauteil anfahren zeigt den Namen.</p>
